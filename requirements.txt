@@ -1,0 +1,5 @@
+#requirements.txt
+python-dotenv
+discord.py
+numpy
+motor
