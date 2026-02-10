@@ -56,7 +56,8 @@ class Bot(commands.Bot):
         - **args**: `{args}`\n
         ```python\n{_traceback.format_exc()}\n```"""))
     async def notify_managers(self,content:str):
-        contents = []
+        contents = [content[:1999]]
+        content = content[1999:]
         while len(content)>2000:
             contents.append(content[:1999])
             content = content[1999:]
