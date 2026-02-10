@@ -60,7 +60,7 @@ async def on_ready():
     print(">>Bot is online<<")
 
 def main():
-    try:bot.run(_getenv("token"))
+    try:bot.run(_getenv("TOKEN"))
     except Exception as e:print(e)
     finally:bot.db.close()
 if __name__ == "__main__":main()
