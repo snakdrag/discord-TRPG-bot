@@ -186,7 +186,7 @@ class Interaction(Addon):
             description="\n".join([
                 f"**{_const.USING}**: `{await self.bot.get_guild_name(
                     doc.get(_const.GUILD_ID,guild_id))}`",
-                "\n".join([f"• **{a[_const.NAME]}**: `{a[_const.VALUE]}{a[_const.COUNT]}`"
+                "\n".join([f"• **{a[_const.NAME]}**: `{a[_const.VALUE]}`"
                     for a in attributes]) if attributes else None,
                 f"**{_const.DESCRIPTION}**: `{doc.get(_const.DESCRIPTION,UNKNOWN)}`"]),
             color=discord.Color.gold())
