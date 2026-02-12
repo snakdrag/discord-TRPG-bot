@@ -22,11 +22,13 @@ class Addon:
             ephemeral:bool = MISSING,
             embed:discord.Embed = MISSING,
     ):
-        if self._send_function:return await self._send_function(
-            content=content,
-            ephemeral=ephemeral if ephemeral is not MISSING else self.ephemeral,
-            embed=embed,
-        )
+        if self._send_function:
+            if embed is MISSING and content is MISSING:content = _const.NOT+_const.DATA
+            return await self._send_function(
+                content=content,
+                ephemeral=ephemeral if ephemeral is not MISSING else self.ephemeral,
+                embed=embed,
+            )
         else:return
     async def find_one(
             self,
