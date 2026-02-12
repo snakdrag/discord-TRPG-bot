@@ -79,12 +79,9 @@ class Interaction(Addon):
             race:str,
     ):
         if race is None:
-            docs = await self.find(_const.RACE,guild_id=self.guild_id)
-            if docs:doc = docs[int(Count_result.rand_result(0,len(docs)-1,_const.INT)[1])]
-            else:doc = {}
-            race:str = doc.get(_const.NAME,UNKNOWN)
+            doc = await self.find_one(_const.CARD,guild_id=self.guild_id)
             attributes:list[dict] = doc.get(_const.ATTRIBUTE,[])
-        else:attributes = (await self.find_one(
+        else:attributes:list[dict] = (await self.find_one(
             _const.RACE,guild_id=self.guild_id,name=race)).get(_const.ATTRIBUTE,[])
         base_value = [Count_result.dnd_result(attr.get(_const.VALUE,"0"))[1] for attr in attributes]
         return (await self.bulk_write(UpdateOne(_const.PLAYER,{"$set":{
