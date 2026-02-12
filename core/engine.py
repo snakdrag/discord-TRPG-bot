@@ -82,7 +82,8 @@ class Count_result:
         elif roll_value <= difficulty:result = 3
         else:result = 4
         return f"{roll_value} → {_DICE_RESULTS[result]}",result
-    def dnd_result(value:str):
+    def dnd_result(value:str|int|float):
+        value = str(value)
         final_text = value
         expression = value
         if value is None:return f"{_const.NOT} {_const.VALUE}",1

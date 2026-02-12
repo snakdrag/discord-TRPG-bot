@@ -39,7 +39,7 @@ class ROLE_MAIN(Cog_Extension):
         if img is not None:url=img.url
         elif img_url is not None:url=img_url
         else:url=str(interaction.user.display_avatar.url)
-        await self.db.bulk_write(UpdateOne(_FEATURE,{"$set":{
+        await step.db.bulk_write(UpdateOne(_FEATURE,{"$set":{
             constant.NAME:name,constant.CALL:call,constant.URL:url}},
             upsert=True,name=name,user_id=step.user_id))
         await step.player_save(role=name,race=race)
@@ -161,7 +161,7 @@ class ROLE_MAIN(Cog_Extension):
         target:str,
         race:str = None,
     ):
-        step = Interaction(self.db,interaction)
+        step = Interaction(interaction)
         await step.first_step()
         await step.player_save(role=target,race=race)
         embed = await step.player_show(role=target,user_id=step.user_id,guild_id=step.guild_id)
@@ -185,7 +185,7 @@ class ROLE_MAIN(Cog_Extension):
         target:str,
         guild:str,
     ):
-        step = Interaction(self.db,interaction)
+        step = Interaction(interaction)
         guild_id,_ = await step.first_step()
         guild_id = int(guild) if guild.isdigit() else guild_id
         player = await step.find_one(constant.PLAYER,name=target,guild_id=guild_id)

@@ -37,8 +37,8 @@ class Bot(commands.Bot):
             command_name = interaction.command.name if interaction.command else UNKNOWN
             await self.notify_managers((
                 f"""**app_command_error**
-                - **command**: `/{command_name}`
-                - **user**: {interaction.user.mention}
+                **command**: `/{command_name}`
+                **user**: `{interaction.user.mention}`
                 ```python\n{"".join(_traceback.format_exception(
                     type(error),error,error.__traceback__))}\n```"""))
             try:
@@ -53,14 +53,13 @@ class Bot(commands.Bot):
             **kwargs:Any,
         ):return await self.notify_managers((
         f"""**on_message_error**: `{event_method}`
-        - **args**: `{args}`
+        **args**: `{args}`
         ```python\n{_traceback.format_exc()}\n```"""))
     async def notify_managers(self,content:str):
         contents = [content[:1999]]
-        content = content[1999:]
         while len(content)>2000:
-            contents.append(content[:1999])
             content = content[1999:]
+            contents.append(content[:1999])
         for user in self.managers:
             await asyncio.gather(*[user.send(cont) for cont in contents],return_exceptions=True)
     async def get_guild_name(self,guild_id:int):

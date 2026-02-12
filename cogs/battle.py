@@ -115,8 +115,8 @@ class BATTLE_MAIN(Cog_Extension):
             attributes = doc.get(constant.ATTRIBUTE,[])
             base_field = [attr[constant.NAME] for attr in attributes]
             if attribute not in base_field:raise AppError(f"{attribute} {constant.NOT+constant.EXIST}")
-            result = (await step.bulk_write(UpdateOne(constant.CARD,{
-                constant.BATTLE_ATTRIBUTE:attribute},ID=doc[constant.ID])))[constant.CARD]
+            result = (await step.bulk_write(UpdateOne(constant.CARD,{"$set":{
+                constant.BATTLE_ATTRIBUTE:attribute}},ID=doc[constant.ID])))[constant.CARD]
             if result.modified_count:return await step.send(constant.ATTRIBUTE+constant.SET+constant.SUCCESS)
             raise AppError(constant.ATTRIBUTE+constant.SET+constant.FAILED)
         except AppError as e:return await step.send(e)
@@ -183,9 +183,10 @@ class BATTLE_MAIN(Cog_Extension):
                 raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
             t_item:dict = items[items_name.index(item)].get(constant.TARGET) if item else {}
             t_skill:dict = skills[skills_name.index(skill)].get(constant.TARGET) if skill else {}
+            t_item = t_item or {}
+            t_skill = t_skill or {}
             if t_item.get(constant.COST_TURN) and t_skill.get(constant.COST_TURN):
-                raise AppError(
-                    f"無法使用兩個{constant.COST_TURN+constant.REACT}在同個時間")
+                raise AppError(f"無法使用兩個{constant.COST_TURN+constant.REACT}在同個時間")
             group = player.get(constant.GROUP)
             battle_data = await step.find_one(_FEATURE,group=group)
             attacker_id = battle_data.get(constant.USER_ID)
@@ -224,7 +225,7 @@ class BATTLE_MAIN(Cog_Extension):
         self,
         interaction:discord.Interaction,
         role:str,
-        target:str = None,
+        target:str,
         item:str = None,
         skill:str = None,
     ):
@@ -245,6 +246,8 @@ class BATTLE_MAIN(Cog_Extension):
                 raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
             t_item:dict = items[items_name.index(item)].get(constant.TARGET) if item else {}
             t_skill:dict = skills[skills_name.index(skill)].get(constant.TARGET) if skill else {}
+            t_item = t_item or {}
+            t_skill = t_skill or {}
             if t_item.get(constant.COST_TURN) and t_skill.get(constant.COST_TURN):
                 raise AppError(f"無法使用兩個{constant.COST_TURN+constant.REACT}在同個時間")
             cost_turn = True
@@ -253,7 +256,8 @@ class BATTLE_MAIN(Cog_Extension):
             group = player.get(constant.GROUP)
             cmd = f"{t_item.get(constant.PROACTIVE_EFFECT,"")};{t_skill.get(
                 constant.PROACTIVE_EFFECT,"")}"
-            _,target_name,target_id = target.split("--",2)
+            target_group,target_name,target_id = target.split("--",2)
+            if target_group!=group:raise AppError("不在同一場戰鬥")
             if t_item.get(constant.CAN_REACT) or t_skill.get(constant.CAN_REACT):
                 await step.bulk_write(UpdateMany(constant.PLAYER,{
                     constant.CAN_REACT:True},ID=player[constant.ID]))

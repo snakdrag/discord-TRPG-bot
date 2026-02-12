@@ -95,32 +95,30 @@ class Interaction(Addon):
             name:str,
             ID = None,
     ):
-        return (await self.bulk_write(UpdateOne(_const.PLAYER,{"$set":{
-            _const.NAME:name}},ID=ID,name=role,guild_id=self.guild_id,user_id=self.user_id),
-            *[UpdateMany(feature,{"$set":{
-                f"{_const.DATA}.$[elem].{_const.NAME}":name}},
-                query_override={f"{_const.DATA}":{"$elemMatch":{_const.USER_ID:self.user_id,_const.NAME:role}}},
-                array_filters=[{f"elem.{_const.USER_ID}":self.user_id,f"elem.{_const.NAME}":role}],
-                guild_id=self.guild_id)
-                for feature in [_const.SKILL,_const.STATE,_const.ITEM]]))[_const.PLAYER]
+        old_path = f"{_const.DATA}.{self.user_id}.{role}"
+        return (await self.bulk_write(
+            UpdateOne(_const.PLAYER,{
+                "$set":{_const.NAME:name}},ID=ID,name=role,guild_id=self.guild_id,user_id=self.user_id)),
+                *[UpdateMany(feature,[{"$set":{f"{_const.DATA}.{self.user_id}.{name}":f"${old_path}"}},{
+                    "$unset":old_path}],query_override={old_path:{"$exists":True}},guild_id=self.guild_id)
+                    for feature in [_const.SKILL,_const.STATE,_const.ITEM]])[_const.PLAYER]
     async def player_delete(
             self,
             role:str,
     ):
         return (await self.bulk_write(DeleteOne(
-            _const.PLAYER,name=role,guild_id=self.guild_id,user_id=self.user_id),*[
-                UpdateMany(feature,{"$pull":{_const.DATA:{_const.NAME:role,_const.USER_ID:self.user_id}}})
+            _const.PLAYER,name=role,guild_id=self.guild_id,user_id=self.user_id),*[UpdateOne(
+                feature,{"$unset":{f"{_const.DATA}.{self.user_id}.{role}":""}},guild_id=self.guild_id)
                 for feature in [_const.SKILL,_const.STATE,_const.ITEM]]))[_const.PLAYER]
     async def player_update(
             self,
             role:str,
             ID = None,
     ):
-        return await Command(self.db,";".join(
-            i.get(_const.PASSIVE_EFFECT,"") for i in _chain.from_iterable(
-                await asyncio.gather(*[self.get(f,role) for f in [_const.SKILL,_const.STATE,_const.ITEM]]))
-                if i.get(_const.ON,False)),await self.find_one(
-                    _const.PLAYER,ID=ID,name=role)).execute()
+        return await Command(self.db,";".join(i.get(_const.PASSIVE_EFFECT,"") for i in _chain.from_iterable(
+            await asyncio.gather(*[self.get(f,role) for f in [_const.SKILL,_const.STATE,_const.ITEM]]))
+            if i.get(_const.DATA,{}).get(str(self.user_id),{}).get(role,{}).get(_const.ON,False)),
+            await self.find_one(_const.PLAYER,ID=ID,name=role)).execute()
     async def player_show(
             self,
             role:str,
@@ -138,8 +136,7 @@ class Interaction(Addon):
         base_field = [attr[_const.NAME] for attr in attributes.get(_const.ATTRIBUTE,[])]
         def _get_stats(key):return to_see_dict(to_dict(player.get(key,[]),base_field))
         def _resolve(lis:list[dict]):
-            if isinstance(lis,Exception):return f"[Error: {type(lis).__name__}]"
-            if not isinstance(lis,list):return "[]"
+            if not lis:return "[]"
             return f"[{", ".join([i[_const.NAME] for i in lis])}]"
         return discord.Embed(
             title=await self.bot.get_guild_name(guild_id),
@@ -229,16 +226,12 @@ class Interaction(Addon):
             user_id:int = None,
         ):
         user_id = user_id or self.user_id
-        return await self.bulk_write(*[UpdateMany(feature,{"$set":{
-            f"{_const.DATA}.$[elem].{_const.TIME}":{
-                "$max":[0,{"$subtract":[f"$$elem.{_const.TIME}",reduce_val]}]}}},
-            query_override={f"{_const.DATA}.{_const.NAME}":role},
-            guild_id=self.guild_id,
-            array_filters=[{f"elem.{_const.USER_ID}":user_id,f"elem.{_const.NAME}":role}])
-            for feature in [_const.SKILL,_const.STATE]],UpdateOne(
-                _const.STATE,{"$pull":{_const.DATA:{
-                    _const.USER_ID:user_id,_const.NAME:role,_const.TIME:{"$lte":0}}}},
-                    guild_id=self.guild_id))
+        path = f"{_const.DATA}.{user_id}.{role}"
+        return await self.bulk_write(*[UpdateMany(feature,[{"$set":{f"{path}.{_const.TIME}":{
+            "$max":[0,{"$subtract":[f"${path}.{_const.TIME}",reduce_val]}]}}}],
+            query_override={f"{path}":{"$exists":True}},guild_id=self.guild_id)
+            for feature in [_const.SKILL,_const.STATE]],UpdateMany(_const.STATE,{"$unset":{
+                path:""}},query_override={f"{path}.{_const.TIME}":{"$lte":0}},guild_id=self.guild_id))
     async def update_single_time(
             self,
             feature:str,
@@ -248,15 +241,10 @@ class Interaction(Addon):
             user_id:int = None
         ):
         user_id = user_id or self.user_id
-        result = await self.bulk_write(UpdateOne(
-            feature,{"$set":{f"{_const.DATA}.$[elem].{_const.TIME}":{
-                "$max":[0,{"$add":[f"$$elem.{_const.TIME}",value]}]}}},
-            query_override={f"{_const.DATA}":{"$elemMatch":{_const.USER_ID:user_id,_const.NAME:role}}},
-            array_filters=[{f"elem.{_const.USER_ID}":user_id,f"elem.{_const.NAME}":role}],
-            name=thing,guild_id=self.guild_id))
-        if feature == _const.ITEM:return (await self.bulk_write(UpdateOne(
-            feature,{"$pull":{_const.DATA:{
-                _const.USER_ID:user_id,_const.NAME:role,_const.NAME:thing,
-                _const.TIME:{"$lte":0}}}},guild_id=self.guild_id)))[feature]
+        path = f"{_const.DATA}.{user_id}.{role}"
+        result = await self.bulk_write(UpdateOne(feature,{"$set":{f"{path}.{_const.TIME}":{
+            "$max":[0,{"$add":[f"${path}.{_const.TIME}",value]}]}}},name=thing, guild_id=self.guild_id))
+        if feature == _const.ITEM:await self.bulk_write(UpdateOne(feature,{"$unset":{path:""}},
+            query_override={f"{path}.{_const.TIME}":{"$lte":0}},name=thing,guild_id=self.guild_id))
         return result[feature]
     

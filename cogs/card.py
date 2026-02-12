@@ -72,10 +72,10 @@ class CARD_MAIN(Cog_Extension):
                 constant.NAME:name,constant.VALUE:value,
                 constant.DESCRIPTION:description}}},upsert=True,guild_id=step.guild_id,
                 query_override={f"{constant.ATTRIBUTE}.{constant.NAME}":{"$ne":name}}))
-            guilds = await self.db.find(_FEATURE,{constant.INCLUDE:step.guild_id})
+            guilds = await step.db.find(_FEATURE,{constant.INCLUDE:step.guild_id})
             guilds_ids = [guild[constant.GUILD_ID] for guild in guilds]
             guilds_ids.append(step.guild_id)
-            await self.db.bulk_write(*[UpdateMany(constant.PLAYER,{
+            await step.db.bulk_write(*[UpdateMany(constant.PLAYER,{
                 "$push":{constant.BASIC:num,constant.MAX:num,constant.NOW:num}},
                 guild_id=guild_id)for guild_id in guilds_ids])
             return await step.send(
@@ -160,10 +160,10 @@ class CARD_MAIN(Cog_Extension):
                     constant.NAME:target}}},guild_id=step.guild_id),
                 UpdateMany(constant.RACE,{"$pull":{constant.ATTRIBUTE:{
                     constant.NAME:target}}},guild_id=step.guild_id))
-            guilds = await self.db.find(_FEATURE,{constant.INCLUDE:step.guild_id})
+            guilds = await step.db.find(_FEATURE,{constant.INCLUDE:step.guild_id})
             guilds_ids = [guild[constant.GUILD_ID] for guild in guilds]
             guilds_ids.append(step.guild_id)
-            await self.db.bulk_write(
+            await step.db.bulk_write(
                 *[UpdateMany(constant.PLAYER,{"$unset":{
                     f"{constant.BASIC}.{idx}":1,f"{constant.MAX}.{idx}":1,f"{constant.NOW}.{idx}":1}},
                     guild_id=guild_id) for guild_id in guilds_ids],

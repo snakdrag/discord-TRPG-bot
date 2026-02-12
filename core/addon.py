@@ -94,16 +94,10 @@ class Addon:
             guild_id:int = None,
     ):
         user_id = user_id or self.user_id
-        docs:list[dict] = await self.db.aggregate(feature,[{"$match":{
-            _const.GUILD_ID:guild_id or self.guild_id,
-            f"{_const.DATA}.{_const.USER_ID}":user_id,
-            f"{_const.DATA}.{_const.NAME}":role}},
-            {"$project":{_const.NAME:1,_const.DATA:{"$filter":{
-                "input":f"${_const.DATA}","as":"item",
-                "cond":{"$and":[{"$eq": [f"$$item.{_const.USER_ID}",user_id]},{
-                    "$eq":[f"$$item.{_const.NAME}",role]}]}}}}}])
-        return [{_const.NAME:doc[_const.NAME],_const.TARGET:doc,
-            _const.DATA:doc[_const.DATA][0]}for doc in docs if doc.get(_const.DATA)]
+        guild_id = guild_id or self.guild_id
+        using_id = (await self.find_one(_const.CARD,guild_id=guild_id)).get(_const.USING_ID,guild_id)
+        return await self.db.find(feature,query_override={
+            _const.GUILD_ID:using_id,f"{_const.DATA}.{user_id}.{role}":{"$exists":True}})
     async def save(
             self,
             feature:str,
@@ -148,19 +142,13 @@ class Addon:
     ):
         user_id = user_id or self.user_id
         doc = await self.find_one(feature=feature,name=thing,guild_id=self.guild_id)
-        if not doc:raise AppError(f"{thing}{_const.NOT}{_const.EXIST}")
+        if not doc:raise AppError(thing+_const.NOT+_const.EXIST)
         about_time = doc.get(_const.TIME,0)
         on = True if feature == _const.STATE else False
-        result = await self.bulk_write(UpdateOne(feature,{"$inc":{
-            f"{_const.DATA}.$.{_const.NUM}":about_num}},query_override={
-                f"{_const.DATA}":{"$elemMatch":{_const.USER_ID:user_id,_const.NAME:role}}},
-                name=thing,guild_id=self.guild_id))
-        if not result[feature].modified_count:return (await self.bulk_write(UpdateOne(feature,{
-            "$push":{_const.DATA:{
-                _const.USER_ID:user_id,_const.NAME:role,_const.NUM:about_num,
-                _const.TIME:Count_result.dnd_result(about_time)[1],_const.ON:on}}},
-                name=thing,guild_id=self.guild_id)))[feature]
-        return result[feature]
+        path = f"{_const.DATA}.{user_id}.{role}"
+        return (await self.bulk_write(UpdateOne(feature,{"$inc":{f"{path}.{_const.NUM}":about_num},"$set":{
+            f"{path}.{_const.TIME}":Count_result.dnd_result(about_time)[1],f"{path}.{_const.ON}":on}},
+            name=thing,guild_id=self.guild_id)))[feature]
     async def remove(
             self,
             feature:str,
@@ -170,13 +158,14 @@ class Addon:
             user_id:int=None,
     ):
         user_id = user_id or self.user_id
-        return (await self.bulk_write(
-            UpdateOne(feature,{"$inc":{f"{_const.DATA}.$.{_const.NUM}":-about_num}},query_override={
-                f"{_const.DATA}":{"$elemMatch":{_const.USER_ID:user_id,_const.NAME:role}}},
-                name=thing,guild_id=self.guild_id),
-            UpdateOne(feature,{"$pull":{_const.DATA:{
-                _const.USER_ID:user_id,_const.NAME:role,_const.NUM:{"$lte":0}}}},
-                name=thing,guild_id=self.guild_id)))[feature]
+        path = f"{_const.DATA}.{user_id}.{role}"
+        result = (await self.bulk_write(UpdateOne(feature,{"$inc":{
+            f"{path}.{_const.NUM}":-about_num}},name=thing,guild_id=self.guild_id)))[feature]
+        doc = await self.find_one(feature=feature,name=thing,guild_id=self.guild_id)
+        current_data:dict = doc.get(_const.DATA,{}).get(str(user_id),{}).get(role,{})
+        if current_data.get(_const.NUM,0) <= 0:return (await self.bulk_write(UpdateOne(feature,{
+            "$unset": {path:""}},name=thing,guild_id=self.guild_id)))[feature]
+        return result
     async def delete(
             self,
             feature:str,

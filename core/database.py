@@ -136,12 +136,12 @@ class DataBase:
                 guild_id = params.get(_const.GUILD_ID)
                 using_id = (await self.card.find_one({
                     _const.GUILD_ID:guild_id}) or {}).get(_const.USING_ID,guild_id)
-                params.update(req.query_override)
                 for field in self._registry[feature][_MODE]:
                     val = params.get(field)
                     if val is not None:
                         if field == _const.USING_ID:req.filter[_const.GUILD_ID] = using_id
                         else:req.filter[field] = val
+                req.filter.update(req.query_override)
             groups[feature].append(req.init())
         features_list = list(groups.keys())
         tasks = []

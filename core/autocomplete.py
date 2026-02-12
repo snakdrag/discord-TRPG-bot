@@ -23,6 +23,10 @@ def _filter_choices(
 
 class Autocomplete(Check):
     def __init__(self,bot:Bot):super().__init__(bot)
+    async def _atc_trait_by_user(self,feature:str,interaction:discord.Interaction,current:str):
+        docs = await self.db.find(feature,query_override={
+            _const.GUILD_ID:interaction.guild_id,f"{_const.DATA}.{interaction.user.id}":{"$exists":True}})
+        return _filter_choices(current,docs)
     def _get_guild_name(self,guild_id:int):
         guild = self.bot.get_guild(guild_id)
         return guild.name if guild else UNKNOWN
@@ -45,8 +49,7 @@ class Autocomplete(Check):
         value_place=_const.ID,function_for_name=self._get_guild_name,function_for_value=str)
     async def atc_role_target(self,interaction:discord.Interaction,current:str
     )->list[app_commands.Choice[str]]:
-        current_lower,choices,i = current.lower(),[],1
-        choices.append(app_commands.Choice(name=_const.ALL,value=_const.ALL))
+        current_lower,choices,i = current.lower(),[],0
         for res in await self.db.aggregate(_const.PLAYER,[{"$match":{
             _const.GUILD_ID:interaction.guild_id}},{"$group":{_const.ID:{
                 _const.GROUP:f"${_const.GROUP}",_const.USER_ID:f"${_const.USER_ID}",
@@ -81,8 +84,8 @@ class Autocomplete(Check):
     )->list[app_commands.Choice[str]]:return _filter_choices(current,
         await self.db.aggregate(_const.PLAYER,[{"$match":{
             _const.GUILD_ID:interaction.guild_id}},{
-                "$group":{_const.GROUP:f"${_const.GROUP}"}}]),
-        name_place=_const.GROUP,value_place=_const.GROUP)
+                "$group":{_const.ID:f"${_const.GROUP}"}}]),
+        name_place=_const.ID,value_place=_const.ID)
     async def atc_role_name(self,interaction:discord.Interaction,current:str
     )->list[app_commands.Choice[str]]:return _filter_choices(current,
         await self.db.find(_const.ROLE,user_id=interaction.user.id))
@@ -104,12 +107,8 @@ class Autocomplete(Check):
         app_commands.Choice(name=Count_result.coc6e,value=Count_result.coc6e),
         app_commands.Choice(name=Count_result.dnd,value=Count_result.dnd)]]
     async def atc_role_item_name(self,interaction:discord.Interaction,current:str
-    )->list[app_commands.Choice[str]]:return _filter_choices(current,
-        await self.db.find(_const.ITEM,query_override={
-                f"{_const.DATA}":{"$elemMatch":{_const.USER_ID:interaction.user.id}}},
-                guild_id=interaction.guild_id))
+    )->list[app_commands.Choice[str]]:return await self._atc_trait_by_user(_const.ITEM,interaction,current)
     async def atc_role_skill_name(self,interaction:discord.Interaction,current:str
-    )->list[app_commands.Choice[str]]:return _filter_choices(current,
-        await self.db.find(_const.SKILL,query_override={
-                f"{_const.DATA}":{"$elemMatch":{_const.USER_ID:interaction.user.id}}},
-                guild_id=interaction.guild_id))
+    )->list[app_commands.Choice[str]]:return await self._atc_trait_by_user(_const.SKILL,interaction,current)
+    async def atc_role_state_name(self,interaction:discord.Interaction,current:str
+    )->list[app_commands.Choice[str]]:return await self._atc_trait_by_user(_const.STATE,interaction,current)
