@@ -56,12 +56,9 @@ class Bot(commands.Bot):
         **args**: `{args}`
         ```python\n{_traceback.format_exc()}\n```"""))
     async def notify_managers(self,content:str):
-        contents = [content[:1999]]
-        while len(content)>2000:
-            content = content[1999:]
-            contents.append(content[:1999])
-        for user in self.managers:
-            await asyncio.gather(*[user.send(cont) for cont in contents],return_exceptions=True)
+        contents = [content[i:i+2000] for i in range(0,len(content),2000)]
+        for cont in contents:
+            await asyncio.gather(*[user.send(cont) for user in self.managers],return_exceptions=True)
     async def get_guild_name(self,guild_id:int):
         if not isinstance(guild_id,int):return UNKNOWN
         guild = self.get_guild(guild_id) or await self.fetch_guild(guild_id)
