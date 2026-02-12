@@ -59,7 +59,7 @@ class DataBase:
         if feature not in self._allow_db:raise AppError(f"{feature}{_const.NOT}{_const.ALLOW}")
         target_info:dict = self._registry[feature]
         collection:_DB = target_info[_DATA]
-        if ID:return await collection.find_one({_const.ID:ID}) or default
+        if ID is not None:return await collection.find_one({_const.ID:ID}) or default
         query:dict = {}
         mapping:dict = {
             _const.NAME:name,

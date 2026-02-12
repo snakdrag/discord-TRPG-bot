@@ -124,7 +124,7 @@ class Addon:
                 raise AppError(_const.NAME+_const.EXIST)
         if old_name is None:old_name=name
         elif name is None:name = old_name
-        quary = {}
+        quary = {_const.GUILD_ID:self.guild_id}
         def _quick_quary(key,value):
             if value is not None:quary[key] = value
         _quick_quary(_const.NAME,name)
@@ -135,7 +135,7 @@ class Addon:
         _quick_quary(_const.COST_TURN,cost_turn)
         _quick_quary(_const.CAN_REACT,can_react)
         _quick_quary(_const.TARGET_NUM,target_num)
-        if not quary:raise AppError(f"{_const.DATA} {_const.NOT} {_const.ENOUGH}")
+        if not quary:raise AppError(_const.DATA+_const.NOT+_const.ENOUGH)
         return await self.bulk_write(UpdateOne(feature,{
             "$set":quary},upsert=True,name=old_name,guild_id=self.guild_id))
     async def give(

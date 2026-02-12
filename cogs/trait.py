@@ -155,6 +155,7 @@ class TRAIT_BASE(Cog_Extension):
             await step.save(feature=self._FEATURE,name=name,description=description,
                 proactive_effect=proactive_effect,passive_effect=passive_effect,
                 time=time,cost_turn=cost_turn,can_react=can_react,target_num=target_num)
+            await step.send(embed=await step.show(self._FEATURE,name))
             return await step.send(await Command(
                 step.db,(proactive_effect or "")+";"+(passive_effect or ""),docs[idx],None,
                 False,Count_result.dnd_result(target_num)[1]).execute(),

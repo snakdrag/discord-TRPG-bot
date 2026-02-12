@@ -213,7 +213,7 @@ class Interaction(Addon):
         if doc.get(_const.GUILD_ID,self.guild_id) != self.guild_id:raise AppError(f"Now importing")
         if old_name is None:old_name=name
         elif name is None:name=old_name
-        quary = {}
+        quary = {_const.GUILD_ID:self.guild_id}
         def _quick_quary(key,value):
             if value is not None:quary[key] = value
         _quick_quary(_const.NAME,name)
