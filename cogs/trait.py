@@ -148,8 +148,7 @@ class TRAIT_BASE(Cog_Extension):
         try:
             if time is not None:Count_result.dnd_result(time)
             docs = await step.db.find(constant.PLAYER,guild_id=step.guild_id)
-            idx = int(Count_result.rand_result(0,len(
-                docs)-1,constant.INT)[1]) if docs else None
+            idx = int(Count_result.rand_result(0,len(docs)-1,constant.INT)[1]) if docs else None
             if idx is None:raise AppError(
                 f"{constant.ALL} {constant.PLAYER} {constant.NOT} {constant.EXIST}")
             await step.save(feature=self._FEATURE,name=name,description=description,
@@ -188,7 +187,7 @@ class TRAIT_BASE(Cog_Extension):
                 cost_turn=cost_turn,can_react=can_react,target_num=target_num,old_name=target)
             return await step.send(await Command(
                 step.db,(proactive_effect or "")+";"+(passive_effect or ""),docs[idx],None,
-                False,Count_result.dnd_result(target_num)[1]).execute(),
+                False,Count_result.dnd_result(target_num or "1")[1]).execute(),
                 embed=await step.show(self._FEATURE,name))
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
