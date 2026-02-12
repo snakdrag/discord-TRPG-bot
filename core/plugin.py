@@ -209,7 +209,7 @@ class Interaction(Addon):
             old_name:str = None,
         ):
         doc = await self.find_one(_const.CARD,guild_id=self.guild_id)
-        if not doc:raise AppError(f"{_const.DATA}{_const.NOT}{_const.EXIST}")
+        if not doc:raise AppError(_const.DATA+_const.NOT+_const.EXIST)
         if doc.get(_const.GUILD_ID,self.guild_id) != self.guild_id:raise AppError(f"Now importing")
         if old_name is None:old_name=name
         elif name is None:name=old_name
@@ -219,7 +219,7 @@ class Interaction(Addon):
         _quick_quary(_const.NAME,name)
         _quick_quary(_const.DESCRIPTION,description)
         _quick_quary(_const.ATTRIBUTE,attributes or doc.get(_const.ATTRIBUTE,[]))
-        if not quary:raise AppError(f"{_const.DATA} {_const.NOT} {_const.ENOUGH}")
+        if not quary:raise AppError(_const.DATA+_const.NOT+_const.EXIST)
         return (await self.bulk_write(UpdateOne(_const.RACE,{"$set":quary},
             upsert=True,name=old_name,guild_id=self.guild_id)))[_const.RACE]
     async def update_all_time(

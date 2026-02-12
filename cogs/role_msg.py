@@ -26,5 +26,10 @@ class ROLE_MSG(Cog_Extension):
     @commands.Cog.listener()
     async def on_message_edit(self,before:discord.Message,after:discord.Message):
         return await self._message(after) if before.content != after.content else None
+    @commands.Cog.listener()
+    async def on_message_delete(self,message:discord.Message):
+        step = Message(self.db,message)
+        if not message.webhook_id:return
+        return await step.bulk_write(DeleteOne(constant.MESSAGE,ID=step.message_id))
 
 async def setup(bot:Bot):await bot.add_cog(ROLE_MSG(bot))
