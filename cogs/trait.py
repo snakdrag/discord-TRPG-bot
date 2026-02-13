@@ -12,9 +12,13 @@ class TRAIT_BASE(Cog_Extension):
 
     def __init_subclass__(cls,feature:str):
 
-        cls._FEATURE = feature
         feature_autocomplete = _DOC.get(feature)
+        cls._FEATURE = feature
         cls._group = app_commands.Group(name=feature,description=constant.ABOUT+feature)
+
+        def add_commands(*commands):
+            for command in commands:cls._group.add_command(command)
+
         _add = app_commands.Command(
             name=constant.ADD,
             description=constant.ADD+feature,
@@ -121,13 +125,15 @@ class TRAIT_BASE(Cog_Extension):
             target_b = feature_autocomplete,
         )(_mix)
 
-        cls._group.add_command(_add)
-        cls._group.add_command(_change)
-        cls._group.add_command(_delete)
-        cls._group.add_command(_give)
-        cls._group.add_command(_remove)
-        cls._group.add_command(_show)
-        cls._group.add_command(_mix)
+        add_commands(
+            _add,
+            _change,
+            _delete,
+            _give,
+            _remove,
+            _show,
+            _mix,
+        )
 
     @Check.is_gm()
     async def _add(

@@ -16,7 +16,7 @@ def _filter_choices(
     for _d in data_list:
         name = str(function_for_name(_d.get(name_place,UNKNOWN)))
         value = function_for_value(_d.get(value_place,UNKNOWN))
-        if current_lower in name.lower() or current_lower in str(value).lower():
+        if current_lower in name.lower() or current_lower in str(value).lower() and str(value) is not UNKNOWN:
             i+=1;choices.append(app_commands.Choice(name=name,value=value))
         if i >= 25:break
     return choices

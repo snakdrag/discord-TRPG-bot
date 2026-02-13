@@ -38,8 +38,8 @@ class Bot(commands.Bot):
             command_name = interaction.command.name if interaction.command else UNKNOWN
             await self.notify_managers((
                 f"""**app_command_error**
-                **command**: `/{command_name}`
-                **user**: `{interaction.user.mention}`
+                **command**: /{command_name}
+                **user**: {interaction.user.mention}
                 ```python\n{"".join(_traceback.format_exception(
                     type(error),error,error.__traceback__))}\n```"""))
             try:
@@ -53,8 +53,8 @@ class Bot(commands.Bot):
             *args:Any,
             **kwargs:Any,
         ):return await self.notify_managers((
-        f"""**on_message_error**: `{event_method}`
-        **args**: `{args}`
+        f"""**on_message_error**: {event_method}
+        **args**: {args}
         ```python\n{_traceback.format_exc()}\n```"""))
     async def notify_managers(self,content:str):
         contents = [content[i:i+2000] for i in range(0,len(content),2000)]

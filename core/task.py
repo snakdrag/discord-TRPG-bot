@@ -14,10 +14,11 @@ class Task(Engine):
             _const.TIME:{"$lte":_datetime.datetime.now(_datetime.timezone.utc)}}):
             try:await self._process_resolved(task)
             except Exception as e:print(e)
-    async def _process_resolved(self,task):
-        task_id = task[_const.ID]
-        task = await self.db.find_one(_const.BATTLE,ID=task_id)
-        if not task: return
+    async def _process_resolved(self,task:dict):
+        task = task or {}
+        task_id = task.get(_const.ID)
+        if task_id is not None:task = await self.db.find_one(_const.BATTLE,ID=task_id)
+        if not task:return
         guild_id = task.get(_const.GUILD_ID)
         group = task.get(_const.GROUP)
         attacker_id = task.get(_const.USER_ID)
@@ -35,7 +36,7 @@ class Task(Engine):
             _const.PLAYER,group=group,guild_id=guild_id,
             user_id=target_data[_const.USER_ID],name=target_data[_const.NAME])
         return_text = await Command(self.db,task.get(_const.CMD),attacker,[target]).execute()
-        await self.db.bulk_write(DeleteOne(_const.BATTLE,ID=task_id))
+        if task_id is not None:await self.db.bulk_write(DeleteOne(_const.BATTLE,ID=task_id))
         if task.get(_const.COST_TURN):
             turn = await self.next_turn(
                 group=group,user_id=attacker_id,

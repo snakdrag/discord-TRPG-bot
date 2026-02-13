@@ -97,8 +97,9 @@ class Command(Addon):
                 _NOW][idx]if idx<len(self._player[_NOW])else 0
         return self.stats_map
     async def execute(self):
+        if self.cmd == ";":return MISSING
         try:
-            attributes = (await self.find_one(_const.CARD,guild_id=self.guild_id)).get(_const.ATTRIBUTE,[])
+            attributes:list[dict] = (await self.find_one(_const.CARD,guild_id=self.guild_id)).get(_const.ATTRIBUTE,[])
             self.base_field:list[str] = [arr.get(_const.NAME) for arr in attributes]
             self.f_idx = {name:i for i,name in enumerate(self.base_field)}
             targets = await self.db.find(

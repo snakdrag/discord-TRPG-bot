@@ -229,7 +229,7 @@ class Interaction(Addon):
         path = f"{_const.DATA}.{user_id}.{role}"
         return await self.bulk_write(*[UpdateMany(feature,[{"$set":{f"{path}.{_const.TIME}":{
             "$max":[0,{"$subtract":[f"${path}.{_const.TIME}",reduce_val]}]}}}],
-            query_override={f"{path}":{"$exists":True}},guild_id=self.guild_id)
+            query_override={f"{path}.{_const.TIME}":{"$exists":True}},guild_id=self.guild_id)
             for feature in [_const.SKILL,_const.STATE]],UpdateMany(_const.STATE,{"$unset":{
                 path:""}},query_override={f"{path}.{_const.TIME}":{"$lte":0}},guild_id=self.guild_id))
     async def update_single_time(
@@ -242,8 +242,8 @@ class Interaction(Addon):
         ):
         user_id = user_id or self.user_id
         path = f"{_const.DATA}.{user_id}.{role}"
-        result = await self.bulk_write(UpdateOne(feature,{"$set":{f"{path}.{_const.TIME}":{
-            "$max":[0,{"$add":[f"${path}.{_const.TIME}",value]}]}}},name=thing, guild_id=self.guild_id))
+        result = await self.bulk_write(UpdateOne(feature,[{"$set":{f"{path}.{_const.TIME}":{
+            "$max":[0,{"$add":[f"${path}.{_const.TIME}",value]}]}}}],name=thing,guild_id=self.guild_id))
         if feature == _const.ITEM:await self.bulk_write(UpdateOne(feature,{"$unset":{path:""}},
             query_override={f"{path}.{_const.TIME}":{"$lte":0}},name=thing,guild_id=self.guild_id))
         return result[feature]

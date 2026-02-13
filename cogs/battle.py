@@ -55,11 +55,11 @@ class BATTLE_MAIN(Cog_Extension):
         try:
             group,player_name,user_id = role.split("--",2)
             player = await step.find_one(constant.PLAYER,name=player_name,user_id=user_id,guild_id=step.guild_id)
-            if player.get(constant.GROUP) is None:
+            if player.get(constant.GROUP) is UNKNOWN:
                 raise AppError(f"{player_name} {constant.GROUP+constant.NOT+constant.EXIST}")
             if player.get(constant.IS_TURN):await self.next_turn(group,step.guild_id,player)
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
-                constant.GROUP:None,constant.IS_TURN:False,constant.CAN_REACT:False}},
+                constant.GROUP:UNKNOWN,constant.IS_TURN:False,constant.CAN_REACT:False}},
                 ID=player[constant.ID])))[constant.PLAYER]
             if result.modified_count:return await step.send(constant.KICK+constant.SUCCESS)
             else:raise AppError(constant.KICK+constant.FAILED)
@@ -82,11 +82,11 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role,user_id=step.user_id,guild_id=step.guild_id)
-            if player.get(constant.GROUP) is None:
+            if player.get(constant.GROUP) is UNKNOWN:
                 raise AppError(f"{role} {constant.GROUP+constant.NOT+constant.EXIST}")
             if player.get(constant.IS_TURN):await self.next_turn(player.get(constant.GROUP),step.guild_id,player)
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
-                constant.GROUP:None,constant.IS_TURN:False,constant.CAN_REACT:False}},
+                constant.GROUP:UNKNOWN,constant.IS_TURN:False,constant.CAN_REACT:False}},
                 ID=player[constant.ID])))[constant.PLAYER]
             if result.modified_count:return await step.send(constant.LEAVE+constant.SUCCESS)
             else:raise AppError(constant.LEAVE+constant.FAILED)
@@ -233,17 +233,12 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role)
-            if not player.get(constant.IS_TURN):
-                raise AppError(f"{role} {constant.NOT+constant.CAN_REACT}")
-            items,skills = await asyncio.gather(
-                step.get(constant.ITEM,role),
-                step.get(constant.SKILL,role))
+            if not player.get(constant.IS_TURN):raise AppError(f"{role} {constant.NOT+constant.CAN_REACT}")
+            items,skills = await asyncio.gather(step.get(constant.ITEM,role),step.get(constant.SKILL,role))
             items_name = [it[constant.NAME] for it in items]
             skills_name = [sk[constant.NAME] for sk in skills]
-            if item and item not in items_name:
-                raise AppError(f"{role}:{item} {constant.NOT+constant.EXIST}")
-            if skill and skill not in skills_name:
-                raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
+            if item and item not in items_name:raise AppError(f"{role}:{item} {constant.NOT+constant.EXIST}")
+            if skill and skill not in skills_name:raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
             t_item:dict = items[items_name.index(item)].get(constant.TARGET) if item else {}
             t_skill:dict = skills[skills_name.index(skill)].get(constant.TARGET) if skill else {}
             t_item = t_item or {}
@@ -259,10 +254,8 @@ class BATTLE_MAIN(Cog_Extension):
             target_group,target_name,target_id = target.split("--",2)
             if target_group!=group:raise AppError("不在同一場戰鬥")
             if t_item.get(constant.CAN_REACT) or t_skill.get(constant.CAN_REACT):
-                await step.bulk_write(UpdateMany(constant.PLAYER,{
-                    constant.CAN_REACT:True},ID=player[constant.ID]))
-            resolve_time = datetime.datetime.now(
-                datetime.timezone.utc)+datetime.timedelta(hours=0.5)
+                await step.bulk_write(UpdateMany(constant.PLAYER,{constant.CAN_REACT:True},ID=player[constant.ID]))
+            resolve_time = datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=0.5)
             battle_data = {
                 constant.GUILD_ID:step.guild_id,
                 constant.USER_ID:step.user_id,
@@ -277,6 +270,7 @@ class BATTLE_MAIN(Cog_Extension):
             if skill:await step.update_single_time(constant.SKILL,role,skill,t_skill.get(constant.TIME))
             if item:await step.update_single_time(constant.ITEM,role,item,-1)
             if not t_item.get(constant.CAN_REACT) and not t_skill.get(constant.CAN_REACT):
+                await step.send("立刻結算")
                 return await self._process_resolved(battle_data)
             else:
                 await step.bulk_write(UpdateOne(constant.BATTLE,{
