@@ -34,7 +34,7 @@ class Bot(commands.Bot):
                 msg = "權限不足"
                 if interaction.response.is_done():return await interaction.followup.send(msg,ephemeral=True)
                 else:return await interaction.response.send_message(msg,ephemeral=True)
-            if isinstance(error,discord.NotFound):return
+            if isinstance(error,discord.errors.NotFound):return
             command_name = interaction.command.name if interaction.command else UNKNOWN
             await self.notify_managers((
                 f"""**app_command_error**

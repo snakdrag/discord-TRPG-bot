@@ -28,8 +28,7 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role,user_id=step.user_id,guild_id=step.guild_id)
-            if not player.get(constant.GROUP):raise AppError(
-                f"{role} {constant.GROUP}{constant.EXIST}:{player[constant.GROUP]}")
+            if player.get(constant.GROUP):raise AppError(f"{role} {constant.GROUP+constant.EXIST}:{player[constant.GROUP]}")
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
                 constant.GROUP:group}},ID=player[constant.ID])))[constant.PLAYER]
             if result.modified_count:return await step.send(constant.JOIN+group+constant.SUCCESS)
@@ -55,11 +54,10 @@ class BATTLE_MAIN(Cog_Extension):
         try:
             group,player_name,user_id = role.split("--",2)
             player = await step.find_one(constant.PLAYER,name=player_name,user_id=user_id,guild_id=step.guild_id)
-            if player.get(constant.GROUP) is UNKNOWN:
-                raise AppError(f"{player_name} {constant.GROUP+constant.NOT+constant.EXIST}")
+            if not group:raise AppError(f"{player_name} {constant.GROUP+constant.NOT+constant.EXIST}")
             if player.get(constant.IS_TURN):await self.next_turn(group,step.guild_id,player)
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
-                constant.GROUP:UNKNOWN,constant.IS_TURN:False,constant.CAN_REACT:False}},
+                constant.GROUP:None,constant.IS_TURN:False,constant.CAN_REACT:False}},
                 ID=player[constant.ID])))[constant.PLAYER]
             if result.modified_count:return await step.send(constant.KICK+constant.SUCCESS)
             else:raise AppError(constant.KICK+constant.FAILED)
@@ -82,11 +80,10 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role,user_id=step.user_id,guild_id=step.guild_id)
-            if player.get(constant.GROUP) is UNKNOWN:
-                raise AppError(f"{role} {constant.GROUP+constant.NOT+constant.EXIST}")
+            if not player.get(constant.GROUP):raise AppError(f"{role} {constant.GROUP+constant.NOT+constant.EXIST}")
             if player.get(constant.IS_TURN):await self.next_turn(player.get(constant.GROUP),step.guild_id,player)
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
-                constant.GROUP:UNKNOWN,constant.IS_TURN:False,constant.CAN_REACT:False}},
+                constant.GROUP:None,constant.IS_TURN:False,constant.CAN_REACT:False}},
                 ID=player[constant.ID])))[constant.PLAYER]
             if result.modified_count:return await step.send(constant.LEAVE+constant.SUCCESS)
             else:raise AppError(constant.LEAVE+constant.FAILED)
@@ -295,9 +292,7 @@ class BATTLE_MAIN(Cog_Extension):
         step = Interaction(interaction)
         await step.first_step()
         try:
-            turn = await self.next_turn((await step.find_one(
-                constant.PLAYER,name=role)).get(constant.GROUP),
-                step.user_id,step.guild_id,role)
+            turn = await self.next_turn((await step.find_one(constant.PLAYER,name=role)).get(constant.GROUP),step.guild_id,role)
             return await step.send(
                 f"<@{turn[0][constant.USER_ID]}>:**{turn[0][constant.NAME]}**",
                 embed=discord.Embed(title=constant.TURN,
