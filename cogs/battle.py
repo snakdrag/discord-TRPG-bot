@@ -53,11 +53,11 @@ class BATTLE_MAIN(Cog_Extension):
         step = Interaction(interaction)
         await step.first_step()
         try:
-            _,player_name,user_id = role.split("--",2)
+            group,player_name,user_id = role.split("--",2)
             player = await step.find_one(constant.PLAYER,name=player_name,user_id=user_id,guild_id=step.guild_id)
             if player.get(constant.GROUP) is None:
                 raise AppError(f"{player_name} {constant.GROUP+constant.NOT+constant.EXIST}")
-            if player.get(constant.IS_TURN):await self.next_turn(player.get(constant.GROUP),step.guild_id,player)
+            if player.get(constant.IS_TURN):await self.next_turn(group,step.guild_id,player)
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
                 constant.GROUP:None,constant.IS_TURN:False,constant.CAN_REACT:False}},
                 ID=player[constant.ID])))[constant.PLAYER]
@@ -276,7 +276,7 @@ class BATTLE_MAIN(Cog_Extension):
             await step.update_all_time(role,1)
             if skill:await step.update_single_time(constant.SKILL,role,skill,t_skill.get(constant.TIME))
             if item:await step.update_single_time(constant.ITEM,role,item,-1)
-            if t_item.get(constant.CAN_REACT) or t_skill.get(constant.CAN_REACT):
+            if not t_item.get(constant.CAN_REACT) or not t_skill.get(constant.CAN_REACT):
                 return await self._process_resolved(battle_data)
             else:return await step.send(f"等待至 {resolve_time.astimezone().strftime("%Y-%m-%d %H:%M:%S")}")
         except AppError as e:return await step.send(e)
