@@ -70,5 +70,7 @@ class Bot(commands.Bot):
         return user.name if user else UNKNOWN
     async def get_target_user(self,user_id):
         return self.get_user(user_id) or await self.fetch_user(user_id)
+    async def add_cogs(self,*cogs):
+        for cog in cogs:await self.add_cog(cog(self))
     def add_commands(self,*commands):
         for command in commands:self.tree.add_command(command)

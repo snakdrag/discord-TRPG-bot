@@ -217,4 +217,4 @@ class CARD_MAIN(Cog_Extension):
         embed = await step.card_show(guild_id=int(guild) if guild and guild.isdigit() else step.guild_id)
         return await step.send(embed=embed)
 
-async def setup(bot:Bot):await bot.add_cog(CARD_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(CARD_MAIN)

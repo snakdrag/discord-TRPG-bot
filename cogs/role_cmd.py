@@ -67,4 +67,4 @@ class ROLE_CMD(Cog_Extension):
             except discord.Forbidden:return await step.send("機器人權限不足")
             except Exception as e:raise e
 
-async def setup(bot:Bot):await bot.add_cog(ROLE_CMD(bot))
+async def setup(bot:Bot):await bot.add_cogs(ROLE_CMD)

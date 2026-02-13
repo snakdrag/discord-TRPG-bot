@@ -32,4 +32,4 @@ class ROLE_MSG(Cog_Extension):
         if not message.webhook_id:return
         return await step.bulk_write(DeleteOne(constant.MESSAGE,ID=step.message_id))
 
-async def setup(bot:Bot):await bot.add_cog(ROLE_MSG(bot))
+async def setup(bot:Bot):await bot.add_cogs(ROLE_MSG)

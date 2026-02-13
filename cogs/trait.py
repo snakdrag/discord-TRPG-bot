@@ -10,15 +10,14 @@ _DOC = {
 
 class TRAIT_BASE(Cog_Extension):
 
-    def __init_subclass__(cls,feature):
+    def __init_subclass__(cls,feature:str):
 
-        _FEATURE = feature
         cls._FEATURE = feature
-        _FEATURE_AUTOCOMPLETE = _DOC.get(_FEATURE)
-        cls._group = app_commands.Group(name=_FEATURE,description=constant.ABOUT+_FEATURE)
+        feature_autocomplete = _DOC.get(feature)
+        cls._group = app_commands.Group(name=feature,description=constant.ABOUT+feature)
         _add = app_commands.Command(
             name=constant.ADD,
-            description=constant.ADD+_FEATURE,
+            description=constant.ADD+feature,
             callback=cls._add,
         )
         _add = app_commands.describe(
@@ -26,7 +25,7 @@ class TRAIT_BASE(Cog_Extension):
             description = constant.DESCRIPTION,
             proactive_effect = constant.PROACTIVE_EFFECT,
             passive_effect = constant.PASSIVE_EFFECT,
-            time = constant.TRAITS_NUM[_FEATURE],
+            time = constant.TRAITS_NUM[feature],
             cost_turn = constant.COST_TURN,
             can_react = constant.CAN_REACT,
             target_num = constant.TARGET_NUM,
@@ -34,92 +33,92 @@ class TRAIT_BASE(Cog_Extension):
         
         _change = app_commands.Command(
             name=constant.CHANGE,
-            description=constant.CHANGE+_FEATURE,
+            description=constant.CHANGE+feature,
             callback=cls._change,
         )
         _change = app_commands.describe(
-            target = _FEATURE,
+            target = feature,
             name = constant.NAME,
             description = constant.DESCRIPTION,
             proactive_effect = constant.PROACTIVE_EFFECT,
             passive_effect = constant.PASSIVE_EFFECT,
-            time = constant.TRAITS_NUM[_FEATURE],
+            time = constant.TRAITS_NUM[feature],
             cost_turn = constant.COST_TURN,
             can_react = constant.CAN_REACT,
             target_num = constant.TARGET_NUM,
         )(_change)
         _change = app_commands.autocomplete(
-            target = _FEATURE_AUTOCOMPLETE,
+            target = feature_autocomplete,
         )(_change)
 
         _delete = app_commands.Command(
             name=constant.DELETE,
-            description=constant.DELETE+_FEATURE,
+            description=constant.DELETE+feature,
             callback=cls._delete,
         )
         _delete = app_commands.describe(
-            target = _FEATURE,
+            target = feature,
         )(_delete)
         _delete = app_commands.autocomplete(
-            target = _FEATURE_AUTOCOMPLETE,
+            target = feature_autocomplete,
         )(_delete)
 
         _show = app_commands.Command(
             name=constant.SHOW,
-            description=constant.SHOW+_FEATURE,
+            description=constant.SHOW+feature,
             callback=cls._show,
         )
         _show = app_commands.describe(
-            target = _FEATURE,
+            target = feature,
         )(_show)
         _show = app_commands.autocomplete(
-            target = _FEATURE_AUTOCOMPLETE,
+            target = feature_autocomplete,
         )(_show)
         
         _give = app_commands.Command(
             name=constant.GIVE,
-            description=constant.GIVE+_FEATURE,
+            description=constant.GIVE+feature,
             callback=cls._give,
         )
         _give = app_commands.describe(
-            target = _FEATURE,
+            target = feature,
             role = constant.ROLE,
             num = constant.NUM,
         )(_give)
         _give = app_commands.autocomplete(
-            target = _FEATURE_AUTOCOMPLETE,
+            target = feature_autocomplete,
             role = Autocomplete.atc_role_player,
         )(_give)
         
         _remove = app_commands.Command(
             name=constant.REMOVE,
-            description=constant.REMOVE+_FEATURE,
+            description=constant.REMOVE+feature,
             callback=cls._remove,
         )
         _remove = app_commands.describe(
-            target = _FEATURE,
+            target = feature,
             role = constant.ROLE,
             num = constant.NUM,
         )(_remove)
         _remove = app_commands.autocomplete(
-            target = _FEATURE_AUTOCOMPLETE,
+            target = feature_autocomplete,
             role = Autocomplete.atc_role_player,
         )(_remove)
 
         _mix = app_commands.Command(
             name=constant.MIX,
-            description=constant.MIX+_FEATURE,
+            description=constant.MIX+feature,
             callback=cls._mix,
         )
         _mix = app_commands.describe(
-            target_a = f"{_FEATURE}_a",
-            target_b = f"{_FEATURE}_b",
+            target_a = f"{feature}_a",
+            target_b = f"{feature}_b",
             name = constant.NAME,
             description = constant.DESCRIPTION,
         )(_mix)
         _mix = app_commands.autocomplete(
-            target_a = _FEATURE_AUTOCOMPLETE,
-            target_b = _FEATURE_AUTOCOMPLETE,
+            target_a = feature_autocomplete,
+            target_b = feature_autocomplete,
         )(_mix)
 
         cls._group.add_command(_add)
@@ -149,8 +148,7 @@ class TRAIT_BASE(Cog_Extension):
             if time is not None:Count_result.dnd_result(time)
             docs = await step.db.find(constant.PLAYER,guild_id=step.guild_id)
             idx = int(Count_result.rand_result(0,len(docs)-1,constant.INT)[1]) if docs else None
-            if idx is None:raise AppError(
-                f"{constant.ALL} {constant.PLAYER} {constant.NOT} {constant.EXIST}")
+            if idx is None:raise AppError(constant.ALL+constant.PLAYER+constant.NOT+constant.EXIST)
             await step.save(feature=self._FEATURE,name=name,description=description,
                 proactive_effect=proactive_effect,passive_effect=passive_effect,
                 time=time,cost_turn=cost_turn,can_react=can_react,target_num=target_num)
@@ -180,8 +178,7 @@ class TRAIT_BASE(Cog_Extension):
             if time is not None:Count_result.dnd_result(time)
             docs = await step.db.find(constant.PLAYER,guild_id=step.guild_id)
             idx = int(Count_result.rand_result(0,len(docs)-1,constant.INT)[1]) if docs else None
-            if idx is None:raise AppError(
-                f"{constant.ALL} {constant.PLAYER} {constant.NOT} {constant.EXIST}")
+            if idx is None:raise AppError(constant.ALL+constant.PLAYER+constant.NOT+constant.EXIST)
             await step.save(feature=self._FEATURE,name=name,description=description,
                 proactive_effect=proactive_effect,passive_effect=passive_effect,time=time,
                 cost_turn=cost_turn,can_react=can_react,target_num=target_num,old_name=target)
@@ -201,8 +198,7 @@ class TRAIT_BASE(Cog_Extension):
         await step.first_step()
         try:
             result = await step.delete(feature=self._FEATURE,name=target)
-            if result.deleted_count:
-                return await step.send(constant.DELETE+constant.SUCCESS)
+            if result.deleted_count:return await step.send(constant.DELETE+constant.SUCCESS)
             else:return await step.send(constant.DELETE+constant.FAILED)
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
@@ -261,10 +257,8 @@ class TRAIT_BASE(Cog_Extension):
         try:
             target_A = await step.find_one(self._FEATURE,name=target_a)
             target_B = await step.find_one(self._FEATURE,name=target_b)
-            proactive_effect=f"{target_A.get(
-                constant.PROACTIVE_EFFECT,"")};{target_B.get(constant.PROACTIVE_EFFECT,"")}"
-            passive_effect=f"{target_A.get(
-                constant.PASSIVE_EFFECT,"")};{target_B.get(constant.PASSIVE_EFFECT,"")}"
+            proactive_effect=f"{target_A.get(constant.PROACTIVE_EFFECT,"")};{target_B.get(constant.PROACTIVE_EFFECT,"")}"
+            passive_effect=f"{target_A.get(constant.PASSIVE_EFFECT,"")};{target_B.get(constant.PASSIVE_EFFECT,"")}"
             await step.save(feature=self._FEATURE,name=name,description=description,
                 proactive_effect=proactive_effect if proactive_effect != ";" else None,
                 passive_effect=passive_effect if passive_effect != ";" else None,
@@ -280,7 +274,4 @@ class STATE_MAIN(TRAIT_BASE,feature=constant.STATE):...
 class SKILL_MAIN(TRAIT_BASE,feature=constant.SKILL):...
 class ITEM_MAIN(TRAIT_BASE,feature=constant.ITEM):...
 
-async def setup(bot:Bot):
-    await bot.add_cog(STATE_MAIN(bot))
-    await bot.add_cog(SKILL_MAIN(bot))
-    await bot.add_cog(ITEM_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(STATE_MAIN,SKILL_MAIN,ITEM_MAIN)

@@ -29,4 +29,4 @@ class RULE_MAIN(Cog_Extension):
             return await step.send(f"{constant.GM}{constant.SET}{constant.FAILED}")
         return await step.send(f"{constant.GM}{constant.SET}{constant.SUCCESS}")
 
-async def setup(bot:Bot):await bot.add_cog(RULE_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(RULE_MAIN)

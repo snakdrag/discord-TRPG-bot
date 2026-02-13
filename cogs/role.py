@@ -193,4 +193,4 @@ class ROLE_MAIN(Cog_Extension):
         embed = await step.player_show(role=target,guild_id=guild_id)
         return await step.send(embed=embed)
 
-async def setup(bot:Bot):await bot.add_cog(ROLE_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(ROLE_MAIN)

@@ -28,7 +28,7 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role,user_id=step.user_id,guild_id=step.guild_id)
-            if player.get(constant.GROUP) is not None:raise AppError(
+            if not player.get(constant.GROUP):raise AppError(
                 f"{role} {constant.GROUP}{constant.EXIST}:{player[constant.GROUP]}")
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
                 constant.GROUP:group}},ID=player[constant.ID])))[constant.PLAYER]
@@ -276,9 +276,13 @@ class BATTLE_MAIN(Cog_Extension):
             await step.update_all_time(role,1)
             if skill:await step.update_single_time(constant.SKILL,role,skill,t_skill.get(constant.TIME))
             if item:await step.update_single_time(constant.ITEM,role,item,-1)
-            if not t_item.get(constant.CAN_REACT) or not t_skill.get(constant.CAN_REACT):
+            if not t_item.get(constant.CAN_REACT) and not t_skill.get(constant.CAN_REACT):
                 return await self._process_resolved(battle_data)
-            else:return await step.send(f"等待至 {resolve_time.astimezone().strftime("%Y-%m-%d %H:%M:%S")}")
+            else:
+                await step.bulk_write(UpdateOne(constant.BATTLE,{
+                    "$set":battle_data},upsert=True,guild_id=step.guild_id,
+                    user_id=step.user_id,name=role,group=group))
+                return await step.send(f"等待至 {resolve_time.astimezone().strftime("%Y-%m-%d %H:%M:%S")}")
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
 
@@ -309,4 +313,4 @@ class BATTLE_MAIN(Cog_Extension):
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
 
-async def setup(bot:Bot):await bot.add_cog(BATTLE_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(BATTLE_MAIN)

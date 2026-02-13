@@ -85,4 +85,4 @@ class ACT_MAIN(Cog_Extension):
         app_commands.Choice(name=constant.MAX,value="M"),
         app_commands.Choice(name=constant.NOW,value="N")]
 
-async def setup(bot:Bot):await bot.add_cog(ACT_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(ACT_MAIN)

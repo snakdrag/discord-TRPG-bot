@@ -108,4 +108,4 @@ class COUNT_MAIN(Cog_Extension):
         app_commands.Choice(name=constant.INT,value=constant.INT),
         app_commands.Choice(name=constant.FLOAT,value=constant.FLOAT)]]
 
-async def setup(bot:Bot):await bot.add_cog(COUNT_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(COUNT_MAIN)

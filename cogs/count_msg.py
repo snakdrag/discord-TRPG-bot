@@ -86,4 +86,4 @@ class COUNT_MSG(Cog_Extension):
     async def on_message_edit(self,before:discord.Message,after:discord.Message):
         return await self._message(after) if before.content != after.content else None
 
-async def setup(bot:Bot):await bot.add_cog(COUNT_MSG(bot))
+async def setup(bot:Bot):await bot.add_cogs(COUNT_MSG)

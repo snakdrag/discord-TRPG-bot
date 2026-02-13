@@ -133,4 +133,4 @@ class RACE_MAIN(Cog_Extension):
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
 
-async def setup(bot:Bot):await bot.add_cog(RACE_MAIN(bot))
+async def setup(bot:Bot):await bot.add_cogs(RACE_MAIN)
