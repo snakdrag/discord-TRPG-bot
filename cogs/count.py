@@ -83,7 +83,7 @@ class COUNT_MAIN(Cog_Extension):
         count:int,
     ):
         return await interaction.response.send_message(
-            f"""{interaction.user.mention}\n`{num} → {"+".join(map(str,Count_result.cut_result(num,count)))}`""")
+            f"{interaction.user.mention}\n`{num} → {"+".join(map(str,Count_result.cut_result(num,count)))}`")
 
     @_group.command(
         name=constant.RANDOM,

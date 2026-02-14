@@ -23,18 +23,18 @@ bot = Bot(
 
 @bot.command(name="restart")
 @commands.is_owner()
-async def _restart(ctx:commands.Context):
-    msg = await load_folder(folder,folder_path,bot.reload_extension)
+async def _restart(ctx:commands.Context,sync:bool = False):
+    msg = await ctx.send(await load_folder(folder,folder_path,bot.load))
+    if sync:msg += f"\nSynced {len(await bot.tree.sync())} commands."
     return await ctx.send(msg)
 @bot.command(name="load")
 @commands.is_owner()
 async def _load(ctx:commands.Context,*extensions:str):
     for extension in extensions:
         try:
-            await bot.load_extension(f"{folder}.{extension}")
+            await bot.load(f"{folder}.{extension}")
             await ctx.send(f"Loaded **{extension}** {constant.SUCCESS}")
         except commands.ExtensionNotFound:await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
-        except commands.ExtensionAlreadyLoaded:await ctx.send(f"**{extension}** had loaded.")
         except Exception as e:await ctx.send(f"Load **{extension}** {constant.FAILED}: ```{e}```")
 @bot.command(name="unload")
 @commands.is_owner()
@@ -45,19 +45,10 @@ async def _unload(ctx:commands.Context,*extensions:str):
             await ctx.send(f"Unloaded **{extension}** {constant.SUCCESS}")
         except commands.ExtensionNotFound:await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
         except Exception as e:await ctx.send(f"Unload **{extension}** {constant.FAILED}: ```{e}```")
-@bot.command(name="reload")
-@commands.is_owner()
-async def _reload(ctx:commands.Context,*extensions:str):
-    for extension in extensions:
-        try:
-            await bot.reload_extension(f"{folder}.{extension}")
-            await ctx.send(f"Loaded **{extension}** {constant.SUCCESS}")
-        except commands.ExtensionNotFound:await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
-        except Exception as e:await ctx.send(f"Reload **{extension}** {constant.FAILED}: ```{e}```")
 @bot.event
 async def on_ready():
-    if not await bot.db.ping():print("Failed to connect MongoDB")
     print(">>Bot is online<<")
+    if not await bot.db.ping():print("Failed to connect MongoDB")
 
 def main():
     try:bot.run(_getenv("TOKEN"))

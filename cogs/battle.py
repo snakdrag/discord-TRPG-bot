@@ -292,7 +292,8 @@ class BATTLE_MAIN(Cog_Extension):
             player = await step.find_one(constant.PLAYER,name=role)
             can_react = player.get(constant.CAN_REACT,False)
             is_turn = player.get(constant.IS_TURN,False)
-            if not can_react or is_turn:raise AppError(f"{constant.NOT+constant.IS_TURN}/{constant.CAN_REACT}")
+            if not can_react and not is_turn:
+                raise AppError(f"{constant.NOT+constant.IS_TURN}/{constant.CAN_REACT}")
             if can_react:
                 await step.send("立刻結算")
                 return await self._process_resolved(await self.db.find_one(

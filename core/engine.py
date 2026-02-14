@@ -93,8 +93,8 @@ class Count_result:
             if sides > 90000000 or sides < 0:raise AppError(f"不支援超過 90000000 與低於 0")
             rolls = _np.random.randint(1,sides+1,num)
             r_sum = int(rolls.sum())
-            final_text = f"""{final_text[:m.start()]}{
-                f"{r_sum}[{'+'.join(map(str,rolls))}]" if num <= 50 else "[...]"}{final_text[m.end():]}"""
+            final_text = f"{final_text[:m.start()]}{f"{r_sum}[{'+'.join(map(str,rolls))}]" 
+                if num <= 50 else "[...]"}{final_text[m.end():]}"
             expression = expression[:m.start()] + str(r_sum) + expression[m.end():]
         final_num = int(Count_result.evaluate(expression))
         return f"{final_text} = {final_num}",final_num
@@ -125,20 +125,17 @@ class Engine(commands.Cog):
         ):
         turns = await self.db.find(_const.PLAYER,guild_id=guild_id,group=group)
         if not turns:return []
-        now_player = next((t for t in turns if t.get(_const.IS_TURN)),{})
+        player = next((t for t in turns if t.get(_const.IS_TURN)),player)
         doc = await self.db.find_one(_const.CARD,guild_id=guild_id)
         attributes:list[dict[str,str]] = doc.get(_const.ATTRIBUTE,[])
         base_field:list[str] = [attr.get(_const.NAME,UNKNOWN) for attr in attributes]
         battle_attribute:str = doc.get(_const.BATTLE_ATTRIBUTE,None)
-        if battle_attribute not in base_field:raise AppError(f"{battle_attribute}{_const.NOT}{_const.EXIST}")
+        if battle_attribute not in base_field:raise AppError(battle_attribute+_const.NOT+_const.EXIST)
         idx = base_field.index(battle_attribute)
         turns.sort(key=lambda x:(x[_const.NOW][idx],str(x[_const.ID])),reverse=True)
-        if now_player:
-            user_id,role=now_player[_const.USER_ID],now_player[_const.NAME]
-            next_idx=next(i for i,p in enumerate(turns) if p[_const.USER_ID]==user_id and p[_const.NAME]==role)
-        elif player:next_idx = (next((i for i,p in enumerate(turns)
-            if p[_const.USER_ID]==player[
-                _const.USER_ID] and p[_const.NAME]==player[_const.NAME]),-1)+1)%len(turns)
+        if player:next_idx = (next((i for i,p in enumerate(turns) 
+            if p[_const.USER_ID]==player[_const.USER_ID] 
+            and p[_const.NAME]==player[_const.NAME]),-1)+1)%len(turns)
         else:next_idx = 0
         turns = turns[next_idx:]+turns[:next_idx]
         await self.db.bulk_write(UpdateMany(_const.PLAYER,{"$set":{

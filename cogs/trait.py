@@ -16,123 +16,107 @@ class TRAIT_BASE(Cog_Extension):
         cls._FEATURE = feature
         cls._group = app_commands.Group(name=feature,description=constant.ABOUT+feature)
 
-        def add_commands(*commands):
-            for command in commands:cls._group.add_command(command)
+        def add_command(
+            func,
+            name:str,
+            description:str,
+            describe:dict = None,
+            autocomplete:dict = None,
+        ):
+            _func = app_commands.Command(name=name,description=description,callback=func)
+            if describe:_func = app_commands.describe(**describe)(_func)
+            if autocomplete:_func = app_commands.autocomplete(**autocomplete)(_func)
+            cls._group.add_command(_func)
 
-        _add = app_commands.Command(
-            name=constant.ADD,
-            description=constant.ADD+feature,
-            callback=cls._add,
+        add_command(func=cls._add,
+            name=constant.ADD,description=constant.ADD+feature,describe=dict(
+                name = constant.NAME,
+                description = constant.DESCRIPTION,
+                proactive_effect = constant.PROACTIVE_EFFECT,
+                passive_effect = constant.PASSIVE_EFFECT,
+                time = constant.TRAITS_NUM[feature],
+                cost_turn = constant.COST_TURN,
+                can_react = constant.CAN_REACT,
+                target_num = constant.TARGET_NUM,
+            ),
         )
-        _add = app_commands.describe(
-            name = constant.NAME,
-            description = constant.DESCRIPTION,
-            proactive_effect = constant.PROACTIVE_EFFECT,
-            passive_effect = constant.PASSIVE_EFFECT,
-            time = constant.TRAITS_NUM[feature],
-            cost_turn = constant.COST_TURN,
-            can_react = constant.CAN_REACT,
-            target_num = constant.TARGET_NUM,
-        )(_add)
-        
-        _change = app_commands.Command(
+        add_command(func=cls._change,
             name=constant.CHANGE,
             description=constant.CHANGE+feature,
-            callback=cls._change,
+            describe=dict(
+                target = feature,
+                name = constant.NAME,
+                description = constant.DESCRIPTION,
+                proactive_effect = constant.PROACTIVE_EFFECT,
+                passive_effect = constant.PASSIVE_EFFECT,
+                time = constant.TRAITS_NUM[feature],
+                cost_turn = constant.COST_TURN,
+                can_react = constant.CAN_REACT,
+                target_num = constant.TARGET_NUM,
+            ),
+            autocomplete=dict(
+                target = feature_autocomplete,
+            )
         )
-        _change = app_commands.describe(
-            target = feature,
-            name = constant.NAME,
-            description = constant.DESCRIPTION,
-            proactive_effect = constant.PROACTIVE_EFFECT,
-            passive_effect = constant.PASSIVE_EFFECT,
-            time = constant.TRAITS_NUM[feature],
-            cost_turn = constant.COST_TURN,
-            can_react = constant.CAN_REACT,
-            target_num = constant.TARGET_NUM,
-        )(_change)
-        _change = app_commands.autocomplete(
-            target = feature_autocomplete,
-        )(_change)
-
-        _delete = app_commands.Command(
+        add_command(func=cls._delete,
             name=constant.DELETE,
             description=constant.DELETE+feature,
-            callback=cls._delete,
+            describe=dict(
+                target = feature,
+            ),
+            autocomplete=dict(
+                target = feature_autocomplete,
+            ),
         )
-        _delete = app_commands.describe(
-            target = feature,
-        )(_delete)
-        _delete = app_commands.autocomplete(
-            target = feature_autocomplete,
-        )(_delete)
-
-        _show = app_commands.Command(
+        add_command(func=cls._show,
             name=constant.SHOW,
             description=constant.SHOW+feature,
-            callback=cls._show,
+            describe=dict(
+                target = feature,
+            ),
+            autocomplete=dict(
+                target = feature_autocomplete,
+            ),
         )
-        _show = app_commands.describe(
-            target = feature,
-        )(_show)
-        _show = app_commands.autocomplete(
-            target = feature_autocomplete,
-        )(_show)
-        
-        _give = app_commands.Command(
+        add_command(func=cls._give,
             name=constant.GIVE,
             description=constant.GIVE+feature,
-            callback=cls._give,
+            describe=dict(
+                target = feature,
+                role = constant.ROLE,
+                num = constant.NUM,
+            ),
+            autocomplete=dict(
+                target = feature_autocomplete,
+                role = Autocomplete.atc_role_player,
+            ),
         )
-        _give = app_commands.describe(
-            target = feature,
-            role = constant.ROLE,
-            num = constant.NUM,
-        )(_give)
-        _give = app_commands.autocomplete(
-            target = feature_autocomplete,
-            role = Autocomplete.atc_role_player,
-        )(_give)
-        
-        _remove = app_commands.Command(
+        add_command(func=cls._remove,
             name=constant.REMOVE,
             description=constant.REMOVE+feature,
-            callback=cls._remove,
+            describe=dict(
+                target = feature,
+                role = constant.ROLE,
+                num = constant.NUM,
+            ),
+            autocomplete=dict(
+                target = feature_autocomplete,
+                role = Autocomplete.atc_role_player,
+            ),
         )
-        _remove = app_commands.describe(
-            target = feature,
-            role = constant.ROLE,
-            num = constant.NUM,
-        )(_remove)
-        _remove = app_commands.autocomplete(
-            target = feature_autocomplete,
-            role = Autocomplete.atc_role_player,
-        )(_remove)
-
-        _mix = app_commands.Command(
+        add_command(func=cls._mix,
             name=constant.MIX,
             description=constant.MIX+feature,
-            callback=cls._mix,
-        )
-        _mix = app_commands.describe(
-            target_a = f"{feature}_a",
-            target_b = f"{feature}_b",
-            name = constant.NAME,
-            description = constant.DESCRIPTION,
-        )(_mix)
-        _mix = app_commands.autocomplete(
-            target_a = feature_autocomplete,
-            target_b = feature_autocomplete,
-        )(_mix)
-
-        add_commands(
-            _add,
-            _change,
-            _delete,
-            _give,
-            _remove,
-            _show,
-            _mix,
+            describe=dict(
+                target_a = f"{feature}_a",
+                target_b = f"{feature}_b",
+                name = constant.NAME,
+                description = constant.DESCRIPTION,
+            ),
+            autocomplete=dict(
+                target_a = feature_autocomplete,
+                target_b = feature_autocomplete,
+            ),
         )
 
     @Check.is_gm()
@@ -263,8 +247,10 @@ class TRAIT_BASE(Cog_Extension):
         try:
             target_A = await step.find_one(self._FEATURE,name=target_a)
             target_B = await step.find_one(self._FEATURE,name=target_b)
-            proactive_effect=f"{target_A.get(constant.PROACTIVE_EFFECT,"")};{target_B.get(constant.PROACTIVE_EFFECT,"")}"
-            passive_effect=f"{target_A.get(constant.PASSIVE_EFFECT,"")};{target_B.get(constant.PASSIVE_EFFECT,"")}"
+            proactive_effect=f"{target_A.get(constant.PROACTIVE_EFFECT,"")};\
+                {target_B.get(constant.PROACTIVE_EFFECT,"")}"
+            passive_effect=f"{target_A.get(constant.PASSIVE_EFFECT,"")};\
+                {target_B.get(constant.PASSIVE_EFFECT,"")}"
             await step.save(feature=self._FEATURE,name=name,description=description,
                 proactive_effect=proactive_effect if proactive_effect != ";" else None,
                 passive_effect=passive_effect if passive_effect != ";" else None,
