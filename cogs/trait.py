@@ -220,7 +220,7 @@ class TRAIT_BASE(Cog_Extension):
         await step.first_step()
         player,user_id = role.split("--",1)
         try:
-            await step.give(self._FEATURE,player,target,num,user_id)
+            await step.give(self._FEATURE,player,target,num,int(user_id))
             return await step.send(embed=await step.show(self._FEATURE,target))
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
@@ -236,7 +236,7 @@ class TRAIT_BASE(Cog_Extension):
         await step.first_step()
         player,user_id = role.split("--",1)
         try:
-            await step.remove(self._FEATURE,player,target,num,user_id)
+            await step.remove(self._FEATURE,player,target,num,int(user_id))
             return await step.send(embed=await step.show(self._FEATURE,target))
         except AppError as e:return await step.send(e)
         except Exception as e:raise e

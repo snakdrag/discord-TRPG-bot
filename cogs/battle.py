@@ -28,7 +28,8 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role,user_id=step.user_id,guild_id=step.guild_id)
-            if player.get(constant.GROUP):raise AppError(f"{role} {constant.GROUP+constant.EXIST}:{player[constant.GROUP]}")
+            if player.get(constant.GROUP):
+                raise AppError(f"{role} {constant.GROUP+constant.EXIST}:{player[constant.GROUP]}")
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
                 constant.GROUP:group}},ID=player[constant.ID])))[constant.PLAYER]
             if result.modified_count:return await step.send(constant.JOIN+group+constant.SUCCESS)
@@ -53,7 +54,9 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             group,player_name,user_id = role.split("--",2)
-            player = await step.find_one(constant.PLAYER,name=player_name,user_id=user_id,guild_id=step.guild_id)
+            player = await step.find_one(
+                constant.PLAYER,name=player_name,user_id=int(user_id),guild_id=step.guild_id)
+            if not player:raise AppError(constant.PLAYER+constant.NOT+constant.EXIST)
             if not group:raise AppError(f"{player_name} {constant.GROUP+constant.NOT+constant.EXIST}")
             if player.get(constant.IS_TURN):await self.next_turn(group,step.guild_id,player)
             result = (await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
@@ -166,18 +169,13 @@ class BATTLE_MAIN(Cog_Extension):
         await step.first_step()
         try:
             player = await step.find_one(constant.PLAYER,name=role)
-            if not player.get(constant.CAN_REACT):
-                raise AppError(f"{role} {constant.NOT+constant.CAN_REACT}")
+            if not player.get(constant.CAN_REACT):raise AppError(f"{role} {constant.NOT+constant.CAN_REACT}")
             await step.player_update(role,ID=player[constant.ID])
-            items,skills = await asyncio.gather(
-                step.get(constant.ITEM,role),
-                step.get(constant.SKILL,role))
+            items,skills = await asyncio.gather(step.get(constant.ITEM,role),step.get(constant.SKILL,role))
             items_name = [it[constant.NAME] for it in items]
             skills_name = [sk[constant.NAME] for sk in skills]
-            if item and item not in items_name:
-                raise AppError(f"{role}:{item} {constant.NOT+constant.EXIST}")
-            if skill and skill not in skills_name:
-                raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
+            if item and item not in items_name:raise AppError(f"{role}:{item} {constant.NOT+constant.EXIST}")
+            if skill and skill not in skills_name:raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
             t_item:dict = items[items_name.index(item)].get(constant.TARGET) if item else {}
             t_skill:dict = skills[skills_name.index(skill)].get(constant.TARGET) if skill else {}
             t_item = t_item or {}
@@ -188,14 +186,11 @@ class BATTLE_MAIN(Cog_Extension):
             battle_data = await step.find_one(_FEATURE,group=group)
             attacker_id = battle_data.get(constant.USER_ID)
             attacker_name = battle_data.get(constant.NAME)
-            attacker = await step.find_one(
-                constant.PLAYER,name=attacker_name,user_id=attacker_id)
+            attacker = await step.find_one(constant.PLAYER,name=attacker_name,user_id=attacker_id)
             if not attacker:raise AppError(f"攻擊者 {constant.NOT} {constant.FIND}")
-            cmd = f"{t_item.get(constant.PROACTIVE_EFFECT,"")};{t_skill.get(
-                constant.PROACTIVE_EFFECT,"")}"
+            cmd = f"{t_item.get(constant.PROACTIVE_EFFECT,"")};{t_skill.get(constant.PROACTIVE_EFFECT,"")}"
             await Command(step.db,cmd,player,[attacker]).execute()
-            await step.bulk_write(UpdateOne(constant.PLAYER,{
-                constant.CAN_REACT:False},ID=player[constant.ID]))
+            await step.bulk_write(UpdateOne(constant.PLAYER,{constant.CAN_REACT:False},ID=player[constant.ID]))
             if not await step.db.find(constant.PLAYER,{
                 constant.CAN_REACT:True},guild_id=step.guild_id,group=group):
                 return await self._process_resolved(battle_data)
@@ -258,7 +253,7 @@ class BATTLE_MAIN(Cog_Extension):
                 constant.USER_ID:step.user_id,
                 constant.NAME:role,
                 constant.CMD:cmd,
-                constant.TARGET:{constant.NAME:target_name,constant.USER_ID:target_id},
+                constant.TARGET:{constant.NAME:target_name,constant.USER_ID:int(target_id)},
                 constant.TIME:resolve_time,
                 constant.COST_TURN:cost_turn,
                 constant.CHANNEL_ID:interaction.channel_id,
@@ -270,9 +265,11 @@ class BATTLE_MAIN(Cog_Extension):
                 await step.send("立刻結算")
                 return await self._process_resolved(battle_data)
             else:
-                await step.bulk_write(UpdateOne(constant.BATTLE,{
-                    "$set":battle_data},upsert=True,guild_id=step.guild_id,
-                    user_id=step.user_id,name=role,group=group))
+                await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
+                    constant.CAN_REACT:True}},name=target_name,group=target_group,
+                    guild_id=step.guild_id,user_id=target_id),UpdateOne(_FEATURE,{
+                        "$set":battle_data},upsert=True,guild_id=step.guild_id,
+                        user_id=step.user_id,name=role,group=group))
                 return await step.send(f"等待至 {resolve_time.astimezone().strftime("%Y-%m-%d %H:%M:%S")}")
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
@@ -292,7 +289,15 @@ class BATTLE_MAIN(Cog_Extension):
         step = Interaction(interaction)
         await step.first_step()
         try:
-            turn = await self.next_turn((await step.find_one(constant.PLAYER,name=role)).get(constant.GROUP),step.guild_id,role)
+            player = await step.find_one(constant.PLAYER,name=role)
+            can_react = player.get(constant.CAN_REACT,False)
+            is_turn = player.get(constant.IS_TURN,False)
+            if not can_react or is_turn:raise AppError(f"{constant.NOT+constant.IS_TURN}/{constant.CAN_REACT}")
+            if can_react:
+                await step.send("立刻結算")
+                return await self._process_resolved(await self.db.find_one(
+                    _FEATURE,group=player.get(constant.GROUP),guild_id=step.guild_id))
+            turn = await self.next_turn(player.get(constant.GROUP),step.guild_id,player)
             return await step.send(
                 f"<@{turn[0][constant.USER_ID]}>:**{turn[0][constant.NAME]}**",
                 embed=discord.Embed(title=constant.TURN,

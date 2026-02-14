@@ -39,8 +39,7 @@ class ACT_MAIN(Cog_Extension):
                 try:value=Count_result.dnd_result(value)[1]
                 except:return await step.send(constant.NOT+constant.NUM)
                 version = 6 if mode == Count_result.coc6e else 7
-                output = f"\n`1D100 ≦ {final_result}：`\n`{Count_result.coc_result(
-                    final_result,version)[0]}`"
+                output = f"\n`1D100 ≦ {final_result}：`\n`{Count_result.coc_result(final_result,version)[0]}`"
             elif mode=="D&D":output = f"\n`{processed_count}：`\n`{display_text}`"
             return await step.send(f"@{role} {output}")
         except AppError as e:return await step.send(e)
@@ -73,7 +72,7 @@ class ACT_MAIN(Cog_Extension):
         player_name,user_id = role.split("--",1)
         try:
             player = await step.find_one(
-                constant.PLAYER,name=player_name,user_id=user_id,guild_id=step.guild_id)
+                constant.PLAYER,name=player_name,user_id=int(user_id),guild_id=step.guild_id)
             command = f"u.{mode}.{attribute}:*0+{value}"
             await Command(step.db,command,player).execute()
             return await step.send(embed=await step.player_show(player_name,ID=player[constant.ID]))
