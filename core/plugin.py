@@ -85,8 +85,8 @@ class Interaction(Addon):
             _const.RACE,guild_id=self.guild_id,name=race)).get(_const.ATTRIBUTE,[])
         base_value = [Count_result.dnd_result(attr.get(_const.VALUE,"0"))[1] for attr in attributes]
         return (await self.bulk_write(UpdateOne(_const.PLAYER,{"$set":{
-            _const.RACE:race,_const.IS_TURN:False,_const.NOW:list(base_value),
-            _const.CAN_REACT:False,_const.GROUP:None,_const.MAX:list(base_value),
+            _const.RACE:race,_const.IS_TURN:0,_const.NOW:list(base_value),
+            _const.CAN_REACT:0,_const.GROUP:None,_const.MAX:list(base_value),
             _const.BASIC:list(base_value)}},upsert=True,name=role,
             guild_id=self.guild_id,user_id=self.user_id)))[_const.PLAYER]
     async def player_change(
@@ -161,7 +161,9 @@ class Interaction(Addon):
         description = []
         def quick_deal(place:str):
             thing = doc.get(place,None)
-            if thing is not None:description.append(f"**{place}**: {thing}")
+            if thing is not None:
+                if place in [_const.COST_TURN,_const.CAN_REACT]:thing = bool(thing)
+                description.append(f"**{place}**: {thing}")
         quick_deal(_const.DESCRIPTION)
         quick_deal(_const.PROACTIVE_EFFECT)
         quick_deal(_const.PASSIVE_EFFECT)

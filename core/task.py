@@ -39,7 +39,7 @@ class Task(Engine):
         if return_text is MISSING:return_text = ""
         else:return_text += "\n"
         if task_id is not None:await self.db.bulk_write(DeleteOne(_const.BATTLE,ID=task_id))
-        if task.get(_const.COST_TURN):
+        if task.get(_const.COST_TURN,0) == 1:
             turn = await self.next_turn(group=group,guild_id=guild_id,player=attacker)
             return await channel.send(
                 f"{return_text}<@{turn[0][_const.USER_ID]}>:**{turn[0][_const.NAME]}**",

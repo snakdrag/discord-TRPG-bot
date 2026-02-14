@@ -126,8 +126,8 @@ class Addon:
         _quick_quary(_const.PROACTIVE_EFFECT,proactive_effect)
         _quick_quary(_const.PASSIVE_EFFECT,passive_effect)
         _quick_quary(_const.TIME,time)
-        _quick_quary(_const.COST_TURN,cost_turn)
-        _quick_quary(_const.CAN_REACT,can_react)
+        _quick_quary(_const.COST_TURN,int(cost_turn) if cost_turn is not None else None)
+        _quick_quary(_const.CAN_REACT,int(can_react) if can_react is not None else None)
         _quick_quary(_const.TARGET_NUM,target_num)
         if not quary:raise AppError(_const.DATA+_const.NOT+_const.ENOUGH)
         return await self.bulk_write(UpdateOne(feature,{

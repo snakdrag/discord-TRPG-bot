@@ -125,7 +125,7 @@ class Engine(commands.Cog):
         ):
         turns = await self.db.find(_const.PLAYER,guild_id=guild_id,group=group)
         if not turns:return []
-        player = next((t for t in turns if t.get(_const.IS_TURN)),player)
+        player = next((t for t in turns if t.get(_const.IS_TURN,0)),player)
         doc = await self.db.find_one(_const.CARD,guild_id=guild_id)
         attributes:list[dict[str,str]] = doc.get(_const.ATTRIBUTE,[])
         base_field:list[str] = [attr.get(_const.NAME,UNKNOWN) for attr in attributes]
@@ -139,6 +139,6 @@ class Engine(commands.Cog):
         else:next_idx = 0
         turns = turns[next_idx:]+turns[:next_idx]
         await self.db.bulk_write(UpdateMany(_const.PLAYER,{"$set":{
-            _const.IS_TURN:False}},guild_id=guild_id,group=group),UpdateOne(
-                _const.PLAYER,{"$set":{_const.IS_TURN:True}},ID=turns[0][_const.ID]))
+            _const.IS_TURN:0}},guild_id=guild_id,group=group),UpdateOne(
+                _const.PLAYER,{"$set":{_const.IS_TURN:1}},ID=turns[0][_const.ID]))
         return turns
