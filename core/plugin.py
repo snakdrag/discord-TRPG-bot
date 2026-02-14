@@ -158,7 +158,7 @@ class Interaction(Addon):
     ):
         doc = await self.find_one(feature,ID=ID,name=thing,guild_id=self.guild_id)
         if not doc:return MISSING
-        description = [f"**{_const.NAME}**: {thing}"]
+        description = []
         def quick_deal(place:str):
             thing = doc.get(place,None)
             if thing is not None:description.append(f"**{place}**: {thing}")
@@ -169,10 +169,7 @@ class Interaction(Addon):
         quick_deal(_const.COST_TURN)
         quick_deal(_const.CAN_REACT)
         quick_deal(_const.TARGET_NUM)
-        return discord.Embed(
-            title=await self.bot.get_guild_name(self.guild_id),
-            description="\n".join(description),
-            color=discord.Color.gold())
+        return discord.Embed(title=thing,description="\n".join(description),color=discord.Color.gold())
     async def card_show(self,guild_id:int=None):
         guild_id = guild_id or self.guild_id
         doc = await self.find_one(_const.CARD,guild_id=guild_id)

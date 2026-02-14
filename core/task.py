@@ -36,13 +36,15 @@ class Task(Engine):
             _const.PLAYER,group=group,guild_id=guild_id,
             user_id=target_data[_const.USER_ID],name=target_data[_const.NAME])
         return_text = await Command(self.db,task.get(_const.CMD),attacker,[target]).execute()
+        if return_text is MISSING:return_text = ""
+        else:return_text += "\n"
         if task_id is not None:await self.db.bulk_write(DeleteOne(_const.BATTLE,ID=task_id))
         if task.get(_const.COST_TURN):
             turn = await self.next_turn(group=group,guild_id=guild_id,player=attacker)
             return await channel.send(
-                f"{return_text}\n<@{turn[0][_const.USER_ID]}>:**{turn[0][_const.NAME]}**",
+                f"{return_text}<@{turn[0][_const.USER_ID]}>:**{turn[0][_const.NAME]}**",
                 embed=discord.Embed(title=_const.TURN,
                     description="\n".join(
                     [f"{i+1}. **{p[_const.NAME]}**" for i,p in enumerate(turn)]
                 ),color=discord.Color.dark_gold()))
-        else:return await channel.send(f"{return_text}\n<@{attacker_id}>:**{attacker_name}**")
+        else:return await channel.send(f"{return_text}<@{attacker_id}>:**{attacker_name}**")
