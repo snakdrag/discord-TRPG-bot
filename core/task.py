@@ -16,7 +16,7 @@ class Task(Engine):
             except Exception as e:print(e)
     async def _process_resolved(self,task:dict):
         task = task or {}
-        task_id = task.get(_const.ID)
+        task_id = task.get(_const.ID,None)
         if task_id is not None:task = await self.db.find_one(_const.BATTLE,ID=task_id)
         if not task:return
         guild_id = task.get(_const.GUILD_ID)

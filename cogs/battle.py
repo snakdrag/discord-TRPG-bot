@@ -191,12 +191,10 @@ class BATTLE_MAIN(Cog_Extension):
             cmd = f"{t_item.get(constant.PROACTIVE_EFFECT,"")};{t_skill.get(constant.PROACTIVE_EFFECT,"")}"
             await Command(step.db,cmd,player,[attacker]).execute()
             await step.bulk_write(UpdateOne(constant.PLAYER,{constant.CAN_REACT:False},ID=player[constant.ID]))
-            if not await step.db.find(constant.PLAYER,{
-                constant.CAN_REACT:True},guild_id=step.guild_id,group=group):
-                return await self._process_resolved(battle_data)
-            else:return await step.send(embed=discord.Embed(title=f"{role} {constant.REACT}",
-                description=f"{constant.USE}:{skill},{item}",
-                color=discord.Color.blue()))
+            await step.send("立即結算")
+            if item:await step.send(embed=await step.show(constant.ITEM,item))
+            if skill:await step.send(embed=await step.show(constant.SKILL,skill))
+            return await self._process_resolved(battle_data)
         except AppError as e:return await step.send(e)
         except Exception as e:raise e
 
@@ -224,6 +222,7 @@ class BATTLE_MAIN(Cog_Extension):
         step = Interaction(interaction)
         await step.first_step()
         try:
+            if item is None and skill is None:raise AppError(f"{constant.NOT,constant.ITEM}/{constant.SKILL}")
             player = await step.find_one(constant.PLAYER,name=role)
             if not player.get(constant.IS_TURN):raise AppError(f"{role} {constant.NOT+constant.CAN_REACT}")
             items,skills = await asyncio.gather(step.get(constant.ITEM,role),step.get(constant.SKILL,role))
@@ -233,20 +232,18 @@ class BATTLE_MAIN(Cog_Extension):
             if skill and skill not in skills_name:raise AppError(f"{role}:{skill} {constant.NOT+constant.EXIST}")
             t_item:dict = items[items_name.index(item)].get(constant.TARGET) if item else {}
             t_skill:dict = skills[skills_name.index(skill)].get(constant.TARGET) if skill else {}
-            t_item = t_item or {}
-            t_skill = t_skill or {}
+            t_item,t_skill = t_item or {},t_skill or {}
             if t_item.get(constant.COST_TURN) and t_skill.get(constant.COST_TURN):
                 raise AppError(f"無法使用兩個{constant.COST_TURN+constant.REACT}在同個時間")
-            cost_turn = True
-            if not t_item.get(constant.COST_TURN) and not t_skill.get(constant.COST_TURN):
-                cost_turn = False
+            cost_turn = bool(t_item.get(constant.COST_TURN,True)) or bool(t_skill.get(constant.COST_TURN,True))
             group = player.get(constant.GROUP)
             cmd = f"{t_item.get(constant.PROACTIVE_EFFECT,"")};{t_skill.get(
                 constant.PROACTIVE_EFFECT,"")}"
             target_group,target_name,target_id = target.split("--",2)
             if target_group!=group:raise AppError("不在同一場戰鬥")
             if t_item.get(constant.CAN_REACT) or t_skill.get(constant.CAN_REACT):
-                await step.bulk_write(UpdateMany(constant.PLAYER,{constant.CAN_REACT:True},ID=player[constant.ID]))
+                await step.bulk_write(UpdateMany(constant.PLAYER,{
+                    constant.CAN_REACT:True},ID=player[constant.ID]))
             resolve_time = datetime.datetime.now(datetime.timezone.utc)+datetime.timedelta(hours=0.5)
             battle_data = {
                 constant.GUILD_ID:step.guild_id,
@@ -263,6 +260,8 @@ class BATTLE_MAIN(Cog_Extension):
             if item:await step.update_single_time(constant.ITEM,role,item,-1)
             if not t_item.get(constant.CAN_REACT) and not t_skill.get(constant.CAN_REACT):
                 await step.send("立刻結算")
+                if item:await step.send(embed=await step.show(constant.ITEM,item))
+                if skill:await step.send(embed=await step.show(constant.SKILL,skill))
                 return await self._process_resolved(battle_data)
             else:
                 await step.bulk_write(UpdateOne(constant.PLAYER,{"$set":{
@@ -270,6 +269,8 @@ class BATTLE_MAIN(Cog_Extension):
                     guild_id=step.guild_id,user_id=target_id),UpdateOne(_FEATURE,{
                         "$set":battle_data},upsert=True,guild_id=step.guild_id,
                         user_id=step.user_id,name=role,group=group))
+                if item:await step.send(embed=await step.show(constant.ITEM,item))
+                if skill:await step.send(embed=await step.show(constant.SKILL,skill))
                 return await step.send(f"等待至 {resolve_time.astimezone().strftime("%Y-%m-%d %H:%M:%S")}")
         except AppError as e:return await step.send(e)
         except Exception as e:raise e

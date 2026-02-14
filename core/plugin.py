@@ -158,17 +158,20 @@ class Interaction(Addon):
     ):
         doc = await self.find_one(feature,ID=ID,name=thing,guild_id=self.guild_id)
         if not doc:return MISSING
+        description = [f"**{_const.NAME}**: {thing}"]
+        def quick_deal(place:str):
+            thing = doc.get(place,None)
+            if thing is not None:description.append(f"**{place}**: {thing}")
+        quick_deal(_const.DESCRIPTION)
+        quick_deal(_const.PROACTIVE_EFFECT)
+        quick_deal(_const.PASSIVE_EFFECT)
+        quick_deal(_const.TIME)
+        quick_deal(_const.COST_TURN)
+        quick_deal(_const.CAN_REACT)
+        quick_deal(_const.TARGET_NUM)
         return discord.Embed(
             title=await self.bot.get_guild_name(self.guild_id),
-            description="\n".join([
-                f"**{_const.NAME}**: {thing}",
-                f"**{_const.DESCRIPTION}**: {doc.get(_const.DESCRIPTION,UNKNOWN)}",
-                f"**{_const.PROACTIVE_EFFECT}**: {doc.get(_const.PROACTIVE_EFFECT,None)}",
-                f"**{_const.PASSIVE_EFFECT}**: {doc.get(_const.PASSIVE_EFFECT,None)}",
-                f"**{_const.TIME}**: {doc.get(_const.TIME,UNKNOWN)}",
-                f"**{_const.COST_TURN}**: {doc.get(_const.COST_TURN,UNKNOWN)}",
-                f"**{_const.CAN_REACT}**: {doc.get(_const.CAN_REACT,UNKNOWN)}",
-                f"**{_const.TARGET_NUM}**: {doc.get(_const.TARGET_NUM,UNKNOWN)}"]),
+            description="\n".join(description),
             color=discord.Color.gold())
     async def card_show(self,guild_id:int=None):
         guild_id = guild_id or self.guild_id
