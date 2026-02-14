@@ -21,9 +21,9 @@ class Task(Engine):
         if not task:return
         guild_id = task.get(_const.GUILD_ID)
         group = task.get(_const.GROUP)
-        attacker_id = task.get(_const.USER_ID)
+        attacker_id = int(task.get(_const.USER_ID))
         attacker_name = task.get(_const.NAME)
-        channel_id = task.get(_const.CHANNEL_ID)
+        channel_id = int(task.get(_const.CHANNEL_ID))
         channel = self.bot.get_channel(channel_id)
         if not channel:
             try:channel = await self.bot.fetch_channel(channel_id)
@@ -38,9 +38,7 @@ class Task(Engine):
         return_text = await Command(self.db,task.get(_const.CMD),attacker,[target]).execute()
         if task_id is not None:await self.db.bulk_write(DeleteOne(_const.BATTLE,ID=task_id))
         if task.get(_const.COST_TURN):
-            turn = await self.next_turn(
-                group=group,user_id=attacker_id,
-                guild_id=guild_id,role=attacker_name)
+            turn = await self.next_turn(group=group,guild_id=guild_id,player=attacker)
             return await channel.send(
                 f"{return_text}\n<@{turn[0][_const.USER_ID]}>:**{turn[0][_const.NAME]}**",
                 embed=discord.Embed(title=_const.TURN,
