@@ -16,7 +16,7 @@ class COUNT_MSG(Cog_Extension):
                 return await message.channel.send(
                     f"{message.author.mention}\n`{text.strip()} → "
                     f"{Count_result.evaluate(text)}`")
-            if command.startswith("coc"):
+            if command.startswith("\coc"):
                 if len(parts) < 2:return await message.channel.send(
                     f"{message.author.mention} : "
                     f"`{command} <{constant.COUNT}> [{constant.DESCRIPTION}] [{constant.TIME}]`")
@@ -33,7 +33,7 @@ class COUNT_MSG(Cog_Extension):
                     if time>1 else f"`{Count_result.coc_result(value,version=version)[0]}`"}"
                 return await message.channel.send(
                     f"{message.author.mention} {text.strip()if text else""}{output}")
-            if command == "dnd":
+            if command == "\dnd":
                 if len(parts) < 2:return await message.channel.send(
                     f"{message.author.mention} : "
                     f"`{command} <{constant.COUNT}> [{constant.DESCRIPTION}] [{constant.TIME}]`")
@@ -69,14 +69,15 @@ class COUNT_MSG(Cog_Extension):
                 return await message.channel.send(
                     f"{message.author.mention}\n"
                     f"`{Count_result.rand_result(num_a,num_b,mode)[0]}`")
-            if command == constant.CHOOSE or command == constant.RESORT:
+            if command == r"\choose" or command == r"\resort":
                 if len(parts) < 2:return await message.channel.send(
                     f"{message.author.mention} : `{command} <thing a> <thing b>...`")
                 return await message.channel.send(
                     f"{message.author.mention}\n"
                     f"`[{" ".join(message.content[len(command)+1:].strip().split())}] → "
                     f"{Count_result.list_result(
-                        message.content[len(command)+1:].strip().split(),command)}`")
+                        message.content[len(command)+1:].strip().split(),
+                        constant.CHOOSE if command == r"\choose" else constant.RESORT)}`")
         except AppError as e:return await message.channel.send(e)
         except Exception as e:raise e
 

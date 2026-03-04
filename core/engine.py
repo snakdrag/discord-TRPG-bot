@@ -73,14 +73,14 @@ class Count_result:
         expression.strip().replace("^","**"),mode="eval").body),2)
     def coc_result(difficulty:int,version:int=7):
         roll_value = _random.randint(1,100)
-        if roll_value == 100:result = 6
-        elif roll_value == 1:result = 0
-        elif roll_value <= difficulty and version == 6:result = 4
-        elif roll_value>95 and difficulty<50:result = 6 if version == 6 else 5
-        elif roll_value <= difficulty/5:result = 1
-        elif roll_value <= difficulty/2:result = 2
-        elif roll_value <= difficulty:result = 3
-        else:result = 4
+        if roll_value == 100:result = 6         #大失敗
+        elif roll_value == 1:result = 0         #大成功
+        elif roll_value <= difficulty and version == 6:result = 4   #成功
+        elif roll_value>95 and difficulty<50:result = 6 if version == 6 else 5      #大失敗/失敗
+        elif roll_value <= difficulty/5:result = 1  #極限成功
+        elif roll_value <= difficulty/2:result = 2  #困難成功
+        elif roll_value <= difficulty:result = 3    #通常成功
+        else:result = 5     #失敗
         return f"{roll_value} → {_DICE_RESULTS[result]}",result
     def dnd_result(value:str|int|float):
         value = str(value)
