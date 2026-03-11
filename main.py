@@ -8,7 +8,6 @@ folder = "cogs"
 folder_path = get_folder_path(folder=folder,file=__file__)
 
 intents = discord.Intents.default()
-
 intents.message_content = True
 intents.webhooks = True
 intents.members = True
