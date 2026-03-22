@@ -1,11 +1,28 @@
+<<<<<<< HEAD
 #main.py
 from core import discord,commands,Bot,constant
 from core.system import load_folder,get_folder_path
 from dotenv import load_dotenv as _load_dotenv;_load_dotenv()
+=======
+# main.py
+from core import (
+    discord,
+    commands,
+    Bot,
+    constant,
+)
+from core.system import (
+    load_folder,
+    get_folder_path,
+)
+from dotenv import load_dotenv as _load_dotenv
+
+_load_dotenv()
+>>>>>>> 5766e2b (調整格式)
 from os import getenv as _getenv
 
 folder = "cogs"
-folder_path = get_folder_path(folder=folder,file=__file__)
+folder_path = get_folder_path(folder=folder, file=__file__)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -21,37 +38,57 @@ bot = Bot(
     url=_getenv("MONGO_URI"),
 )
 
+
 @bot.command(name="restart")
 @commands.is_owner()
-async def _restart(ctx:commands.Context,sync:bool = False):
-    msg = await ctx.send(await load_folder(folder,folder_path,bot.load))
-    if sync:msg += f"\nSynced {len(await bot.tree.sync())} commands."
+async def _restart(ctx: commands.Context, sync: bool = False):
+    msg = await ctx.send(await load_folder(folder, folder_path, bot.load))
+    if sync:
+        msg += f"\nSynced {len(await bot.tree.sync())} commands."
     return await ctx.send(msg)
+
+
 @bot.command(name="load")
 @commands.is_owner()
-async def _load(ctx:commands.Context,*extensions:str):
+async def _load(ctx: commands.Context, *extensions: str):
     for extension in extensions:
         try:
             await bot.load(f"{folder}.{extension}")
             await ctx.send(f"Loaded **{extension}** {constant.SUCCESS}")
-        except commands.ExtensionNotFound:await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
-        except Exception as e:await ctx.send(f"Load **{extension}** {constant.FAILED}: ```{e}```")
+        except commands.ExtensionNotFound:
+            await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
+        except Exception as e:
+            await ctx.send(f"Load **{extension}** {constant.FAILED}: ```{e}```")
+
+
 @bot.command(name="unload")
 @commands.is_owner()
-async def _unload(ctx:commands.Context,*extensions:str):
+async def _unload(ctx: commands.Context, *extensions: str):
     for extension in extensions:
         try:
             await bot.unload_extension(f"{folder}.{extension}")
             await ctx.send(f"Unloaded **{extension}** {constant.SUCCESS}")
-        except commands.ExtensionNotFound:await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
-        except Exception as e:await ctx.send(f"Unload **{extension}** {constant.FAILED}: ```{e}```")
+        except commands.ExtensionNotFound:
+            await ctx.send(f"**{extension}**{constant.NOT}{constant.FIND}")
+        except Exception as e:
+            await ctx.send(f"Unload **{extension}** {constant.FAILED}: ```{e}```")
+
+
 @bot.event
 async def on_ready():
     print(">>Bot is online<<")
-    if not await bot.db.ping():print("Failed to connect MongoDB")
+    if not await bot.db.ping():
+        print("Failed to connect MongoDB")
+
 
 def main():
-    try:bot.run(_getenv("TOKEN"))
-    except Exception as e:print(e)
-    finally:bot.db.close()
-if __name__ == "__main__":main()
+    try:
+        bot.run(_getenv("TOKEN"))
+    except Exception as e:
+        print(e)
+    finally:
+        bot.db.close()
+
+
+if __name__ == "__main__":
+    main()

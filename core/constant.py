@@ -1,4 +1,4 @@
-#core.constant.py
+# core.constant.py
 
 DB = "MongoDB"
 
@@ -108,7 +108,7 @@ BATTLE = "戰鬥"
 PLAYER = "玩家"
 MESSAGE = "訊息"
 TRAITS_NUM = {
-    SKILL:"冷卻",
-    STATE:"持續",
-    ITEM:"耐久",
+    SKILL: "冷卻",
+    STATE: "持續",
+    ITEM: "耐久",
 }
