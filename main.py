@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-#main.py
-from core import discord,commands,Bot,constant
-from core.system import load_folder,get_folder_path
-from dotenv import load_dotenv as _load_dotenv;_load_dotenv()
-=======
 # main.py
 from core import (
     discord,
@@ -18,7 +12,6 @@ from core.system import (
 from dotenv import load_dotenv as _load_dotenv
 
 _load_dotenv()
->>>>>>> 5766e2b (調整格式)
 from os import getenv as _getenv
 
 folder = "cogs"
